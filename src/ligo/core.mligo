@@ -2,13 +2,13 @@
   https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/main.mligo 
 *)
 
-#include "types.mligo"
-#include "consts.mligo"
-#include "helpers.mligo"
-#include "transfers.mligo"
-#include "math.mligo"
-#include "swaps.mligo"
-#include "token/fa2.mligo"
+#include "./common/types.mligo"
+#include "./common/consts.mligo"
+#include "./common/helpers.mligo"
+#include "./common/transfers.mligo"
+#include "./common/math.mligo"
+#include "./common/swaps.mligo"
+#include "./common/token/fa2.mligo"
 
 let rec initialize_tick ((ticks, tick_index, tick_witness,
     initial_tick_cumulative_outside,

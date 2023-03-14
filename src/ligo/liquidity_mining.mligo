@@ -17,7 +17,7 @@ further analysis is performed.
 
 *)
 
-#include "types.mligo"
+#include "./common/types.mligo"
 
 (*** Utils ***)
 
