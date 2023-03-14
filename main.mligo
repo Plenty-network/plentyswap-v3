@@ -66,11 +66,6 @@ let garbage_collect_tick (s : storage) (tick_index : tick_index) : storage =
     let tick = get_tick s.ticks tick_index internal_tick_not_exist_err in
 
     if tick.n_positions = 0n then
-#if DEBUG
-        let _ : unit = if tick.liquidity_net <> 0 then
-            failwith internal_non_empty_position_gc_err
-            else unit in
-#endif
         let ticks = s.ticks in
         let prev = get_tick ticks tick.prev internal_tick_not_exist_err in
         let next = get_tick ticks tick.next internal_tick_not_exist_err in
@@ -189,20 +184,14 @@ let update_balances_after_position_change
         else unit in
 
     let op_x = if delta.x > 0 then
-        x_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.x) s.constants
+        cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.x) s.constants.token_x
     else
-#if DEBUG
-        let _ : unit = if delta.x <> 0 && to_x = (Tezos.get_self_address ()) then failwith internal_unexpected_income_err else unit in
-#endif
-        x_transfer (Tezos.get_self_address ()) to_x (abs delta.x) s.constants in
+        cfmm_token_transfer (Tezos.get_self_address ()) to_x (abs delta.x) s.constants.token_x in
 
     let op_y = if delta.y > 0 then
-        y_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.y) s.constants
+        cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.y) s.constants.token_y
     else
-#if DEBUG
-        let _ : unit = if delta.y <> 0 && to_x = (Tezos.get_self_address ()) then failwith internal_unexpected_income_err else unit in
-#endif
-        y_transfer (Tezos.get_self_address ()) to_y (abs delta.y) s.constants in
+        cfmm_token_transfer (Tezos.get_self_address ()) to_y (abs delta.y) s.constants.token_y in
 
     ([op_x ; op_y], s )
 
@@ -347,73 +336,6 @@ let update_position (s : storage) (p : update_position_param) : result =
 
     (ops, s)
 
-// Entrypoint that returns cumulative values at given range at the current moment
-// of time.
-//
-// This works only for initialized indexes.
-let snapshot_cumulatives_inside (s, p : storage * snapshot_cumulatives_inside_param) : result =
-    // Since we promise to return `nat` values,
-    // it is important to check that the requested range is not negative.
-    let _: unit = if p.lower_tick_index > p.upper_tick_index then failwith tick_order_err else unit in
-
-    let sums = get_last_cumulatives s.cumulatives_buffer in
-    let cums_total =
-            { tick = sums.tick.sum
-            ; seconds = Tezos.get_now() - epoch_time
-            ; seconds_per_liquidity = {x128 = int sums.spl.sum.x128}
-            } in
-
-    [@inline]
-    let eval_cums (above, index, cums_outside : bool * tick_index * cumulatives_data) =
-        // Formulas 6.22 when 'above', 6.23 otherwise
-        if (s.cur_tick_index >= index) = above
-        then
-            { tick =
-                cums_total.tick - cums_outside.tick
-            ; seconds =
-                cums_total.seconds - cums_outside.seconds
-            ; seconds_per_liquidity = {x128 =
-                cums_total.seconds_per_liquidity.x128 - cums_outside.seconds_per_liquidity.x128
-                }
-            }
-        else
-            cums_outside
-        in
-
-    let lower_tick = get_tick s.ticks p.lower_tick_index tick_not_exist_err in
-    let upper_tick = get_tick s.ticks p.upper_tick_index tick_not_exist_err in
-
-    let lower_cums_outside =
-            { tick = lower_tick.tick_cumulative_outside
-            ; seconds = int lower_tick.seconds_outside
-            ; seconds_per_liquidity = {x128 = int lower_tick.seconds_per_liquidity_outside.x128}
-            } in
-    let upper_cums_outside =
-            { tick = upper_tick.tick_cumulative_outside
-            ; seconds = int upper_tick.seconds_outside
-            ; seconds_per_liquidity = {x128 = int upper_tick.seconds_per_liquidity_outside.x128}
-            } in
-
-    let cums_below_lower = eval_cums(false, p.lower_tick_index, lower_cums_outside) in
-    let cums_above_upper = eval_cums(true, p.upper_tick_index, upper_cums_outside) in
-    let res =
-            { tick_cumulative_inside =
-                cums_total.tick
-                    - cums_below_lower.tick
-                    - cums_above_upper.tick
-            ; seconds_inside =
-                cums_total.seconds
-                    - cums_below_lower.seconds
-                    - cums_above_upper.seconds
-            ; seconds_per_liquidity_inside = {x128 =
-                cums_total.seconds_per_liquidity.x128
-                    - cums_below_lower.seconds_per_liquidity.x128
-                    - cums_above_upper.seconds_per_liquidity.x128
-                }
-            }
-
-    in ([Tezos.transaction res 0mutez p.callback], s)
-
 // Increase the number of stored accumulators.
 let increase_observation_count (s, p : storage * increase_observation_count_param) : result =
     let buffer = s.cumulatives_buffer in
@@ -504,11 +426,7 @@ let get_cumulatives (buffer : timed_cumulatives_buffer) (t : timestamp) : cumula
         { tick_cumulative = r_v.tick.sum
         ; seconds_per_liquidity_cumulative = r_v.spl.sum
         }
-
-let observe (s : storage) (p : observe_param) : result =
-    let value = List.map (get_cumulatives s.cumulatives_buffer) p.times
-    in ([Tezos.transaction value 0mutez p.callback], s)
-
+    
 // Update the cumulative values stored for the recent timestamps.
 //
 // This has to be called on every update to the contract, not necessarily
@@ -555,29 +473,100 @@ let update_timed_cumulatives (s : storage) : storage =
         }
         in {s with cumulatives_buffer = new_buffer}
 
-let get_position_info (s : storage) (p : get_position_info_param) : result =
-    let position = get_position(p.position_id, s.positions) in
-    let result =
+
+(* Views*)
+
+(* 
+    View that returns cumulative values at given range at the current moment
+    of time. 
+    Note: This works only for initialized indexes. 
+*)
+[@view]
+let snapshot_cumulatives_inside (p, s: snapshot_cumulatives_inside_param * storage) : cumulatives_inside_snapshot =
+    // Since we promise to return `nat` values,
+    // it is important to check that the requested range is not negative.
+    let _: unit = if p.lower_tick_index > p.upper_tick_index then failwith tick_order_err else unit in
+
+    let sums = get_last_cumulatives s.cumulatives_buffer in
+    let cums_total =
+            { tick = sums.tick.sum
+            ; seconds = Tezos.get_now() - epoch_time
+            ; seconds_per_liquidity = {x128 = int sums.spl.sum.x128}
+            } in
+
+    [@inline]
+    let eval_cums (above, index, cums_outside : bool * tick_index * cumulatives_data) =
+        // Formulas 6.22 when 'above', 6.23 otherwise
+        if (s.cur_tick_index >= index) = above
+        then
+            { tick =
+                cums_total.tick - cums_outside.tick
+            ; seconds =
+                cums_total.seconds - cums_outside.seconds
+            ; seconds_per_liquidity = {x128 =
+                cums_total.seconds_per_liquidity.x128 - cums_outside.seconds_per_liquidity.x128
+                }
+            }
+        else
+            cums_outside
+        in
+
+    let lower_tick = get_tick s.ticks p.lower_tick_index tick_not_exist_err in
+    let upper_tick = get_tick s.ticks p.upper_tick_index tick_not_exist_err in
+
+    let lower_cums_outside =
+            { tick = lower_tick.tick_cumulative_outside
+            ; seconds = int lower_tick.seconds_outside
+            ; seconds_per_liquidity = {x128 = int lower_tick.seconds_per_liquidity_outside.x128}
+            } in
+    let upper_cums_outside =
+            { tick = upper_tick.tick_cumulative_outside
+            ; seconds = int upper_tick.seconds_outside
+            ; seconds_per_liquidity = {x128 = int upper_tick.seconds_per_liquidity_outside.x128}
+            } in
+
+    let cums_below_lower = eval_cums(false, p.lower_tick_index, lower_cums_outside) in
+    let cums_above_upper = eval_cums(true, p.upper_tick_index, upper_cums_outside) in
+        { tick_cumulative_inside =
+            cums_total.tick
+                - cums_below_lower.tick
+                - cums_above_upper.tick
+        ; seconds_inside =
+            cums_total.seconds
+                - cums_below_lower.seconds
+                - cums_above_upper.seconds
+        ; seconds_per_liquidity_inside = {x128 =
+            cums_total.seconds_per_liquidity.x128
+                - cums_below_lower.seconds_per_liquidity.x128
+                - cums_above_upper.seconds_per_liquidity.x128
+            }
+        }
+
+
+[@view]
+let observe (times, s: timestamp list * storage) : cumulatives_value list =
+    List.map (get_cumulatives s.cumulatives_buffer) times
+
+
+[@view]
+let get_position_info (position_id, s : position_id * storage) : position_info  =
+    let position = get_position(position_id, s.positions) in
         { liquidity = position.liquidity
         ; owner = position.owner
         ; lower_tick_index = position.lower_tick_index
         ; upper_tick_index = position.upper_tick_index
         }
-    in ([Tezos.transaction result 0mutez p.callback], s)
+
 
 let main ((p, s) : parameter * storage) : result =
-let _: unit = if (Tezos.get_amount ()) = 0tez then unit else failwith non_zero_transfer_err in
-(* start by updating the oracles *)
-let s = update_timed_cumulatives s in
-(* dispatch call to the proper entrypoint *)
- match p with
-| X_to_y p -> x_to_y s p
-| Y_to_x p -> y_to_x s p
-| Set_position p -> set_position s p
-| Update_position p -> update_position s p
-| Get_position_info p -> get_position_info s p
-| X_to_x_prime p -> x_to_x_prime s p
-| Call_fa2 p -> call_fa2 s p
-| Snapshot_cumulatives_inside p -> snapshot_cumulatives_inside(s, p)
-| Observe p -> observe s p
-| Increase_observation_count n -> increase_observation_count(s, n)
+    let _: unit = if (Tezos.get_amount ()) = 0tez then unit else failwith non_zero_transfer_err in
+    (* start by updating the oracles *)
+    let s = update_timed_cumulatives s in
+    (* dispatch call to the proper entrypoint *)
+    match p with
+        | X_to_y p -> x_to_y s p
+        | Y_to_x p -> y_to_x s p
+        | Set_position p -> set_position s p
+        | Update_position p -> update_position s p
+        | Call_fa2 p -> call_fa2 s p
+        | Increase_observation_count n -> increase_observation_count(s, n)

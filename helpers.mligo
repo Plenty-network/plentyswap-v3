@@ -44,12 +44,6 @@ let sqrt_price_move_x (liquidity : nat) (sqrt_price_old : x80n) (dx : nat) : x80
             (Bitwise.shift_left (liquidity * sqrt_price_old.x80) 80n)
             ((Bitwise.shift_left liquidity 80n) + dx * sqrt_price_old.x80)
         } in
-#if DEBUG
-    let _ : unit =
-        if sqrt_price_new <= sqrt_price_old
-            then unit
-            else failwith "sqrt_price_move_x: sqrt_price moved in the wrong direction" in
-#endif
     sqrt_price_new
 
 
@@ -85,12 +79,6 @@ let sqrt_price_move_y (liquidity : nat) (sqrt_price_old : x80n) (dy : nat) : x80
         { x80 =
             ceildiv (Bitwise.shift_left dy 80n) liquidity + sqrt_price_old.x80
         } in
-#if DEBUG
-    let _ : unit =
-        if sqrt_price_new >= sqrt_price_old
-            then unit
-            else failwith "sqrt_price_move_y: sqrt_price moved in the wrong direction" in
-#endif
     sqrt_price_new
 
 (* Helper function to grab a tick we know exists in the tick indexed state. *)

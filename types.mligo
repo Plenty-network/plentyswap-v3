@@ -7,6 +7,11 @@
 #else
 #define TYPES_MLIGO
 
+(* Token standards *)
+type token = 
+    | Fa12 of address
+    | Fa2 of address * nat
+
 (* Keeps a positive value with -2^80 precision. *)
 type x80n = { x80 : nat }
 
@@ -26,49 +31,49 @@ type position_id = nat
 type token_id = nat
 
 type transfer_destination =
-  [@layout:comb]
-  { to_ : address
-  ; token_id : position_id
-  ; amount : nat
-  }
+    [@layout:comb]
+    { to_ : address
+    ; token_id : position_id
+    ; amount : nat
+    }
 
 type transfer_item =
-  [@layout:comb]
-  { from_ : address
-  ; txs : transfer_destination list
-  }
+    [@layout:comb]
+    { from_ : address
+    ; txs : transfer_destination list
+    }
 
 type transfer_params = transfer_item list
 
 type balance_request_item =
-  [@layout:comb]
-  { owner : address
-  ; token_id : position_id
-  }
+    [@layout:comb]
+    { owner : address
+    ; token_id : position_id
+    }
 
 type balance_response_item =
-  [@layout:comb]
-  { request : balance_request_item
-  ; balance : nat
-  }
+    [@layout:comb]
+    { request : balance_request_item
+    ; balance : nat
+    }
 
 type balance_request_params =
-  [@layout:comb]
-  { requests : balance_request_item list
-  ; callback : balance_response_item list contract
-  }
+    [@layout:comb]
+    { requests : balance_request_item list
+    ; callback : balance_response_item list contract
+    }
 
 type operator_param =
-  [@layout:comb]
-  { owner : address
-  ; operator : address
-  ; token_id : position_id
-  }
+    [@layout:comb]
+    { owner : address
+    ; operator : address
+    ; token_id : position_id
+    }
 
 type update_operator =
-  [@layout:comb]
-  | Add_operator of operator_param
-  | Remove_operator of operator_param
+    [@layout:comb]
+    | Add_operator of operator_param
+    | Remove_operator of operator_param
 
 type update_operators_param = update_operator list
 
@@ -76,10 +81,10 @@ type operators = (operator_param, unit) big_map
 
 
 type fa2_parameter =
-  [@layout:comb]
-  | Balance_of of balance_request_params
-  | Transfer of transfer_params
-  | Update_operators of update_operators_param
+    [@layout:comb]
+    | Balance_of of balance_request_params
+    | Transfer of transfer_params
+    | Update_operators of update_operators_param
 
 
 type balance_nat = {x : nat ; y : nat}
@@ -288,13 +293,12 @@ let init_cumulatives_buffer (extra_reserved_slots : nat) : timed_cumulatives_buf
 // TZIP-16 metadata map
 type metadata_map = (string, bytes) big_map
 
-type constants = {
+type constants = [@layout:comb] {
+    factory: address ;
     fee_bps : nat ;
     ctez_burn_fee_bps : nat ;
-    x_token_id : token_id ;
-    y_token_id : token_id ;
-    x_token_address : address ;
-    y_token_address : address ;
+    token_x: token ;
+    token_y: token ;
     tick_spacing : nat ;
 }
 
@@ -426,16 +430,6 @@ type y_to_x_rec_param = x_to_y_rec_param
 type snapshot_cumulatives_inside_param = {
     lower_tick_index : tick_index ;
     upper_tick_index : tick_index ;
-    callback : cumulatives_inside_snapshot contract ;
-}
-
-type oracle_view_param = cumulatives_value list
-
-type observe_param =
-[@layout:comb]
-{
-    times : timestamp list;
-    callback : oracle_view_param contract
 }
 
 type increase_observation_count_param = {
@@ -449,44 +443,17 @@ type position_info = {
     upper_tick_index : tick_index;
 }
 
-
-type get_position_info_param =
-[@layout:comb]
-{
-    position_id : position_id;
-    callback : position_info contract;
-}
-
 type result = (operation list) * storage
 
-type x_to_x_prime_param = {
-    (* Amount of X tokens to sell. *)
-    dx : nat ;
-    (* Address of another segmented-cfmm contract. *)
-    x_prime_contract : address ;
-    (* The transaction won't be executed past this point. *)
-    deadline : timestamp ;
-    (* The transaction won't be executed if buying less than the given amount of X' tokens. *)
-    min_dx_prime : nat ;
-    (* Recipient of dx'. *)
-    to_dx_prime : address ;
-}
 
 (* Entrypoints *)
 
-type views =
-  | IC_sum of int
-
 type parameter =
-  | X_to_y of x_to_y_param
-  | Y_to_x of y_to_x_param
-  | X_to_x_prime of x_to_x_prime_param (* equivalent to token_to_token *)
-  | Set_position of set_position_param
-  | Update_position of update_position_param
-  | Get_position_info of get_position_info_param
-  | Call_fa2 of fa2_parameter
-  | Snapshot_cumulatives_inside of snapshot_cumulatives_inside_param
-  | Observe of observe_param
-  | Increase_observation_count of increase_observation_count_param
+    | X_to_y of x_to_y_param
+    | Y_to_x of y_to_x_param
+    | Set_position of set_position_param
+    | Update_position of update_position_param
+    | Call_fa2 of fa2_parameter
+    | Increase_observation_count of increase_observation_count_param
 
 #endif
