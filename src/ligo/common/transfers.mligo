@@ -2,6 +2,9 @@
   https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/transfers.mligo 
 *)
 
+#include "./types.mligo"
+#include "./errors.mligo"
+
 type transfer_fa2 = (address * (address * (token_id * nat)) list) list
 type transfer_fa12 = address * (address * nat)
 

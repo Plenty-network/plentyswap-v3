@@ -1,8 +1,6 @@
 (* Taken and modified from the original code at: 
   https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/errors.mligo 
 *)
-
-
 #if ERRORS_MLIGO
 #else
 #define ERRORS_MLIGO
@@ -146,6 +144,9 @@
 (* Price became negative when crossing a tick *)
 [@inline] let internal_negative_price = 326n
 
+(* Custom errors for factory *)
+[@inline] let invalid_fee_tier = 400n
+[@inline] let not_authorised = 401n
 
 
 #endif

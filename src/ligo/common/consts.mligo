@@ -8,6 +8,8 @@
  * - ctez_burn_fee_bps : nat
 *)
 
+#include "types.mligo"
+
 #if CONSTS_MLIGO
 #else
 #define CONSTS_MLIGO

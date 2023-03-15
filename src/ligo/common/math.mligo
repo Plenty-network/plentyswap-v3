@@ -7,6 +7,7 @@
 #define MATH_MLIGO
 
 #include "types.mligo"
+#include "errors.mligo"
 
 [@inline] let fixed_point_mul (a : fixed_point) (b : fixed_point) : fixed_point =
     { v = a.v * b.v ; offset = a.offset + b.offset }
