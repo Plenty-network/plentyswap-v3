@@ -2,12 +2,6 @@
   https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/consts.mligo 
 *)
 
-(* Note: Some contract specific constants that can be edited per deployment
- * need to be set in the storage (use the Makefile to do so automatically):
- * - fee_bps : nat
- * - ctez_burn_fee_bps : nat
-*)
-
 #include "types.mligo"
 
 #if CONSTS_MLIGO
@@ -38,8 +32,5 @@
 
 [@inline] let one_minus_fee_bps (c : constants) : nat =
   abs(10000n - c.fee_bps)
-
-[@inline] let one_minus_ctez_burn_fee_bps (c : constants) : nat =
-  abs(10000n - c.ctez_burn_fee_bps)
 
 #endif

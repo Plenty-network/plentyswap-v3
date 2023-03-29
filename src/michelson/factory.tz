@@ -555,10 +555,9 @@
                  IF_NONE { PUSH string "invalid_fee_tier" ; FAILWITH } {} ;
                  DUP 3 ;
                  DUP 3 ;
-                 PUSH nat 0 ;
-                 DUP 7 ;
+                 DUP 6 ;
                  SELF_ADDRESS ;
-                 PAIR 6 ;
+                 PAIR 5 ;
                  PUSH nat 0 ;
                  PUSH int 0 ;
                  DUP 8 ;
@@ -731,7 +730,6 @@
                        (pair (pair (pair (pair (pair %constants
                                                   (address %factory)
                                                   (nat %fee_bps)
-                                                  (nat %ctez_burn_fee_bps)
                                                   (or %token_x (address %fa12) (pair %fa2 address nat))
                                                   (or %token_y (address %fa12) (pair %fa2 address nat))
                                                   (nat %tick_spacing))
@@ -1262,12 +1260,7 @@
                             DUP 5 ;
                             APPLY ;
                             LAMBDA
-                              (pair (pair (pair (pair (pair (pair address
-                                                                  nat
-                                                                  nat
-                                                                  (or address (pair address nat))
-                                                                  (or address (pair address nat))
-                                                                  nat)
+                              (pair (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                             (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                       int
                                                       int)
@@ -1281,12 +1274,7 @@
                                              int
                                              (pair (pair (pair (pair (pair nat nat) int) nat int) (pair int nat) nat nat) int)))
                                     int)
-                              (pair (pair (pair (pair (pair address
-                                                            nat
-                                                            nat
-                                                            (or address (pair address nat))
-                                                            (or address (pair address nat))
-                                                            nat)
+                              (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                       (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                 int
                                                 int)
@@ -1412,12 +1400,7 @@
                                    { DIG 2 ; DROP 2 } } ;
                             LAMBDA
                               (pair (lambda (pair int nat) nat)
-                                    (pair (pair (pair (pair (pair (pair address
-                                                                        nat
-                                                                        nat
-                                                                        (or address (pair address nat))
-                                                                        (or address (pair address nat))
-                                                                        nat)
+                                    (pair (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                   (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                             int
                                                             int)
@@ -1571,12 +1554,7 @@
                               (pair (pair (lambda (pair address address nat (or address (pair address nat))) operation)
                                           (lambda (pair int nat) nat)
                                           (lambda (pair int int) int))
-                                    (pair (pair (pair (pair (pair (pair address
-                                                                        nat
-                                                                        nat
-                                                                        (or address (pair address nat))
-                                                                        (or address (pair address nat))
-                                                                        nat)
+                                    (pair (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                   (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                             int
                                                             int)
@@ -1598,12 +1576,7 @@
                                           nat
                                           nat))
                               (pair (list operation)
-                                    (pair (pair (pair (pair address
-                                                            nat
-                                                            nat
-                                                            (or address (pair address nat))
-                                                            (or address (pair address nat))
-                                                            nat)
+                                    (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                       (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                 int
                                                 int)
@@ -1812,7 +1785,7 @@
                                      CAR ;
                                      CAR ;
                                      CAR ;
-                                     GET 7 ;
+                                     GET 5 ;
                                      DUP 2 ;
                                      CAR ;
                                      ABS ;
@@ -1827,7 +1800,7 @@
                                      CAR ;
                                      CAR ;
                                      CAR ;
-                                     GET 7 ;
+                                     GET 5 ;
                                      DUP 2 ;
                                      CAR ;
                                      ABS ;
@@ -1849,7 +1822,7 @@
                                      CAR ;
                                      CAR ;
                                      CAR ;
-                                     GET 9 ;
+                                     GET 7 ;
                                      DIG 2 ;
                                      CDR ;
                                      ABS ;
@@ -1864,7 +1837,7 @@
                                      CAR ;
                                      CAR ;
                                      CAR ;
-                                     GET 9 ;
+                                     GET 7 ;
                                      DIG 2 ;
                                      CDR ;
                                      ABS ;
@@ -2310,7 +2283,7 @@
                                         CAR ;
                                         CAR ;
                                         CAR ;
-                                        GET 10 ;
+                                        GET 8 ;
                                         PUSH nat 0 ;
                                         DUP 2 ;
                                         DUP 4 ;
@@ -3024,12 +2997,7 @@
                                     PAIR ;
                                     PAIR ;
                                     LEFT (pair (pair nat nat)
-                                               (pair (pair (pair (pair (pair address
-                                                                             nat
-                                                                             nat
-                                                                             (or address (pair address nat))
-                                                                             (or address (pair address nat))
-                                                                             nat)
+                                               (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                        (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                  int
                                                                  int)
@@ -3054,12 +3022,7 @@
                                         EQ ;
                                         IF { RIGHT
                                                (pair (pair nat nat)
-                                                     (pair (pair (pair (pair (pair address
-                                                                                   nat
-                                                                                   nat
-                                                                                   (or address (pair address nat))
-                                                                                   (or address (pair address nat))
-                                                                                   nat)
+                                                     (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                              (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                        int
                                                                        int)
@@ -3260,12 +3223,7 @@
                                                   UPDATE 1 ;
                                                   RIGHT
                                                     (pair (pair nat nat)
-                                                          (pair (pair (pair (pair (pair address
-                                                                                        nat
-                                                                                        nat
-                                                                                        (or address (pair address nat))
-                                                                                        (or address (pair address nat))
-                                                                                        nat)
+                                                          (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                                   (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                             int
                                                                             int)
@@ -3636,12 +3594,7 @@
                                                   UPDATE 2 ;
                                                   UPDATE 1 ;
                                                   LEFT (pair (pair nat nat)
-                                                             (pair (pair (pair (pair (pair address
-                                                                                           nat
-                                                                                           nat
-                                                                                           (or address (pair address nat))
-                                                                                           (or address (pair address nat))
-                                                                                           nat)
+                                                             (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                                      (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                                int
                                                                                int)
@@ -3694,7 +3647,7 @@
                                          CAR ;
                                          CAR ;
                                          CAR ;
-                                         GET 7 ;
+                                         GET 5 ;
                                          DIG 2 ;
                                          SELF_ADDRESS ;
                                          SENDER ;
@@ -3707,7 +3660,7 @@
                                          CAR ;
                                          CAR ;
                                          CAR ;
-                                         GET 9 ;
+                                         GET 7 ;
                                          DIG 2 ;
                                          DIG 4 ;
                                          CDR ;
@@ -3741,12 +3694,7 @@
                                     PAIR ;
                                     PAIR ;
                                     LEFT (pair (pair nat nat)
-                                               (pair (pair (pair (pair (pair address
-                                                                             nat
-                                                                             nat
-                                                                             (or address (pair address nat))
-                                                                             (or address (pair address nat))
-                                                                             nat)
+                                               (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                        (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                  int
                                                                  int)
@@ -3771,12 +3719,7 @@
                                         EQ ;
                                         IF { RIGHT
                                                (pair (pair nat nat)
-                                                     (pair (pair (pair (pair (pair address
-                                                                                   nat
-                                                                                   nat
-                                                                                   (or address (pair address nat))
-                                                                                   (or address (pair address nat))
-                                                                                   nat)
+                                                     (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                              (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                        int
                                                                        int)
@@ -3993,12 +3936,7 @@
                                                   UPDATE 1 ;
                                                   RIGHT
                                                     (pair (pair nat nat)
-                                                          (pair (pair (pair (pair (pair address
-                                                                                        nat
-                                                                                        nat
-                                                                                        (or address (pair address nat))
-                                                                                        (or address (pair address nat))
-                                                                                        nat)
+                                                          (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                                   (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                             int
                                                                             int)
@@ -4366,12 +4304,7 @@
                                                   UPDATE 1 ;
                                                   UPDATE 1 ;
                                                   LEFT (pair (pair nat nat)
-                                                             (pair (pair (pair (pair (pair address
-                                                                                           nat
-                                                                                           nat
-                                                                                           (or address (pair address nat))
-                                                                                           (or address (pair address nat))
-                                                                                           nat)
+                                                             (pair (pair (pair (pair (pair address nat (or address (pair address nat)) (or address (pair address nat)) nat)
                                                                                      (pair (pair nat nat) (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) nat))
                                                                                int
                                                                                int)
@@ -4426,7 +4359,7 @@
                                          CAR ;
                                          CAR ;
                                          CAR ;
-                                         GET 9 ;
+                                         GET 7 ;
                                          DIG 2 ;
                                          SELF_ADDRESS ;
                                          SENDER ;
@@ -4439,7 +4372,7 @@
                                          CAR ;
                                          CAR ;
                                          CAR ;
-                                         GET 7 ;
+                                         GET 5 ;
                                          DIG 2 ;
                                          DIG 4 ;
                                          CDR ;

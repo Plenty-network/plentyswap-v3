@@ -50,7 +50,6 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
     let c: constants = {
         factory = Tezos.get_self_address ();
         fee_bps = fee_bps;
-        ctez_burn_fee_bps = 0n; (* TODO: remove if not required *)
         token_x = token_x;
         token_y = token_y;
         tick_spacing = tick_spacing;

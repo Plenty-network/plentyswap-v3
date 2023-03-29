@@ -296,7 +296,6 @@ type metadata_map = (string, bytes) big_map
 type constants = [@layout:comb] {
     factory: address ;
     fee_bps : nat ;
-    ctez_burn_fee_bps : nat ;
     token_x: token ;
     token_y: token ;
     tick_spacing : nat ;
