@@ -8,9 +8,12 @@
 #define TYPES_MLIGO
 
 (* Token standards *)
+(* Note: Tez pairs are not possible in segmented cfmm. The value constructor is only added 
+   for matching the type with the token-variant in ve-system *)
 type token = 
     | Fa12 of address
     | Fa2 of address * nat
+    | Tez
 
 (* Keeps a positive value with -2^80 precision. *)
 type x80n = { x80 : nat }
@@ -329,6 +332,19 @@ type storage = {
     *)
     fee_growth : balance_nat_x128 ;
 
+    (* Collected only when `is_ve = true` i.e the pool is a part of the ve system *)
+    (* Taken as a percentage share from the total swap fee *)
+    protocol_share : {
+        x : nat;
+        y : nat;
+    };
+
+    (* Taken as a percentage share from the total swap fee *)
+    dev_share : {
+        x: nat;
+        y: nat;
+    };
+
     (* States of all initialized ticks. *)
     ticks : tick_map ;
 
@@ -352,6 +368,9 @@ type storage = {
 
     (* Exponents ladder for the calculation of 'half_bps_pow' *)
     ladder : ladder;
+
+    (* `true` when the pool is a part of the ve-system *)
+    is_ve : bool;
 }
 
 (* Entrypoints types *)
@@ -411,7 +430,14 @@ type x_to_y_param = {
     to_dy : address ;
 }
 
-type x_to_y_rec_param = {s : storage ; dx : nat ; dy : nat}
+type x_to_y_rec_param = {
+    s : storage ; 
+    dx : nat ; 
+    dy : nat ;
+
+    (* dev share bps, protocol share bps *)
+    fee_shares: nat * nat;
+}
 
 type y_to_x_param = {
     (* Y tokens to sell. *)
@@ -442,6 +468,10 @@ type position_info = {
     upper_tick_index : tick_index;
 }
 
+type add_fees_params = { epoch: nat; fees: (token, nat) map; }
+
+type forwardFee_params = { feeDistributor: address; epoch: nat; }
+
 type result = (operation list) * storage
 
 
@@ -454,5 +484,8 @@ type parameter =
     | Update_position of update_position_param
     | Call_fa2 of fa2_parameter
     | Increase_observation_count of increase_observation_count_param
+    | ForwardFee of forwardFee_params
+    | Retrieve_dev_share
+    | Toggle_ve
 
 #endif

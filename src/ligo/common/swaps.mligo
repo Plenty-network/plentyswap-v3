@@ -123,11 +123,22 @@ let fix_cur_tick_index (cur_tick_index, sqrt_price_new, l : tick_index * x80n * 
   in
   fix_cur_tick_index_rec (cur_tick_index, half_bps_pow (cur_tick_index.i, l))
 
+
 (* Calculates the new `cur_tick_index` after a given price change. *)
 let calc_new_cur_tick_index (cur_tick_index : tick_index) (sqrt_price_old : x80n) (sqrt_price_new : x80n) (l : ladder): tick_index =
     let cur_tick_index_delta = floor_log_half_bps_x80(sqrt_price_new, sqrt_price_old, too_big_price_change_err) in
     let cur_tick_index_new = {i = cur_tick_index.i + cur_tick_index_delta } in
     fix_cur_tick_index(cur_tick_index_new, sqrt_price_new, l)
+
+
+(* Calculate fee after subtracting dev and protocol shares *)
+[@inline]
+let take_share (fee, (dev, protocol): nat * (nat * nat)) : nat * nat * nat = 
+    let dev_share = floordiv (fee * dev) 10000n in
+    let protocol_share = if protocol > 0n then floordiv (fee * protocol) 10000n else 0n in
+    let fee = assert_nat (fee - dev_share - protocol_share, fee_share_too_high) in
+    (fee, dev_share, protocol_share)
+
 
 (* Helper function for x_to_y, recursively loops over ticks to execute a trade. *)
 let rec x_to_y_rec (p : x_to_y_rec_param) : x_to_y_rec_param =
@@ -136,6 +147,10 @@ let rec x_to_y_rec (p : x_to_y_rec_param) : x_to_y_rec_param =
     else
         (* The fee that would be extracted from selling dx. *)
         let fee = ceildiv (p.dx * p.s.constants.fee_bps) 10000n in
+
+        (* Take out protocol and dev shares from the fee *)
+        let fee, dev_share, protocol_share = take_share (fee, p.fee_shares) in
+
         (* What the new price will be, assuming it's within the current tick. *)
         let sqrt_price_new = sqrt_price_move_x p.s.liquidity p.s.sqrt_price (assert_nat (p.dx - fee, internal_fee_more_than_100_percent_err)) in
         (* What the new value of cur_tick_index will be. *)
@@ -146,7 +161,14 @@ let rec x_to_y_rec (p : x_to_y_rec_param) : x_to_y_rec_param =
             let s_new = {p.s with
                 sqrt_price = sqrt_price_new ;
                 cur_tick_index = cur_tick_index_new ;
-                fee_growth = {p.s.fee_growth with x = {x128 = p.s.fee_growth.x.x128 + Bitwise.shift_left fee 128n / p.s.liquidity}}} in
+                fee_growth = {p.s.fee_growth with x = {x128 = p.s.fee_growth.x.x128 + Bitwise.shift_left fee 128n / p.s.liquidity}};
+                dev_share = {
+                    p.s.dev_share with x = p.s.dev_share.x + dev_share
+                };
+                protocol_share = {
+                    p.s.protocol_share with x = p.s.protocol_share.x + protocol_share
+                }
+            } in
             {p with s = s_new ; dx = 0n ; dy = p.dy + dy}
         else
             (* We did cross the tick. *)
@@ -171,6 +193,9 @@ let rec x_to_y_rec (p : x_to_y_rec_param) : x_to_y_rec_param =
             let dx_consumed = ceildiv (dx_for_dy * 10000n) (one_minus_fee_bps(p.s.constants)) in
             (* Deduct the fee we will actually be paying. *)
             let fee = assert_nat (dx_consumed - dx_for_dy, internal_impossible_err) in
+            (* Take out protocol and dev shares from the fee *)
+            let fee, dev_share, protocol_share = take_share (fee, p.fee_shares) in
+
             let fee_growth_x_new = {x128 = p.s.fee_growth.x.x128 + (floordiv (Bitwise.shift_left fee 128n) p.s.liquidity)} in
             let fee_growth_new = {p.s.fee_growth with x=fee_growth_x_new} in
             (* Flip tick cumulative growth. *)
@@ -207,10 +232,17 @@ let rec x_to_y_rec (p : x_to_y_rec_param) : x_to_y_rec_param =
                 ticks = ticks_new ;
                 fee_growth = fee_growth_new ;
                 (* Update liquidity as we enter new tick region. *)
-                liquidity = assert_nat (p.s.liquidity - tick.liquidity_net, internal_liquidity_below_zero_err)
+                liquidity = assert_nat (p.s.liquidity - tick.liquidity_net, internal_liquidity_below_zero_err);
+                dev_share = {
+                    p.s.dev_share with x = p.s.dev_share.x + dev_share
+                };
+                protocol_share = {
+                    p.s.protocol_share with x = p.s.protocol_share.x + protocol_share
+                }
                 } in
             let p_new = {p with s = s_new ; dx = assert_nat (p.dx - dx_consumed, internal_307) ; dy = p.dy + dy} in
             x_to_y_rec p_new
+
 
 let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
     if p.s.liquidity = 0n then
@@ -302,9 +334,18 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
             let p_new = {p with s = s_new ; dy = assert_nat (p.dy - dy_consumed, internal_307) ; dx = p.dx + dx} in
             y_to_x_rec p_new
 
+
+(* Retrieve fee shares from the factory *)
+let get_fee_shares (factory: address) (is_ve: bool) : nat * nat =
+    match Tezos.call_view "get_fee_shares" unit factory with
+    | None -> failwith invalid_contract 
+    (* Don't charge protocol fees if the pool is not a part of ve-system *)
+    | Some (dev, protocol) -> if is_ve then (dev, protocol) else (dev, 0n)
+
+
 (* Get amount of X spent, Y received, and updated storage. *)
 let update_storage_x_to_y (s : storage) (dx : nat) : (nat * nat * storage) =
-    let r = x_to_y_rec {s = s ; dx = dx ; dy = 0n} in
+    let r = x_to_y_rec {s = s ; dx = dx ; dy = 0n; fee_shares = get_fee_shares s.constants.factory s.is_ve} in
     let dx_spent = assert_nat (dx - r.dx, internal_309) in
     let dy_received = r.dy in
     (dx_spent, dy_received, r.s)
@@ -328,7 +369,7 @@ let x_to_y (s : storage) (p : x_to_y_param) : result =
 (* Trade up to a quantity dy of asset y, receives dx *)
 let y_to_x (s : storage) (p : y_to_x_param) : result =
     let _: unit = check_deadline p.deadline in
-    let r = y_to_x_rec {s = s ; dy = p.dy ; dx = 0n} in
+    let r = y_to_x_rec {s = s ; dy = p.dy ; dx = 0n; fee_shares = get_fee_shares s.constants.factory s.is_ve} in
     let dy_spent = assert_nat (p.dy - r.dy, internal_309) in
     let dx_received = r.dx in
     if dx_received < p.min_dx then

@@ -144,9 +144,22 @@
 (* Price became negative when crossing a tick *)
 [@inline] let internal_negative_price = 326n
 
-(* Custom errors for factory *)
+(* Invalid fee tier has been selected for the pool deployment *)
 [@inline] let invalid_fee_tier = 400n
+
+(* Only authorised addresses are allowed to proceed *)
 [@inline] let not_authorised = 401n
 
+(* Pool does not exist in the list of initialised pools *)
+[@inline] let invalid_pool = 402n
+
+(* Requested contract/EP does not exist *)
+[@inline] let invalid_contract = 403n
+
+(* dev + protocol share exceed 100000 bps *)
+[@inline] let fee_share_too_high = 404n
+
+(* Creating a tez pool is not allowed *)
+[@inline] let tez_not_allowed = 405n
 
 #endif

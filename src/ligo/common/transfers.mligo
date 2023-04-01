@@ -24,3 +24,4 @@ let cfmm_token_transfer (from : address) (to_ : address) (amnt : nat) (t : token
             | Some c -> c in
         Tezos.transaction (from, (to_, amnt)) 0mutez token_contract
     end
+    | Tez -> failwith internal_impossible_err

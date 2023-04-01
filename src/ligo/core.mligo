@@ -474,6 +474,60 @@ let update_timed_cumulatives (s : storage) : storage =
         in {s with cumulatives_buffer = new_buffer}
 
 
+(* Called by voter to transfer the protocol share of swap fees over to the fee distributor *)
+let forward_fee (s: storage) (p: forwardFee_params) : result =
+    let voter = 
+        match Tezos.call_view "get_voter_address" unit s.constants.factory with
+        | None -> failwith invalid_contract
+        | Some v -> v in
+    let _: unit = if Tezos.get_sender () <> voter then failwith not_authorised else unit in
+
+    let fee_distributor: add_fees_params contract = 
+        match Tezos.get_entrypoint_opt "%add_fees" p.feeDistributor with
+        | None -> failwith invalid_contract
+        | Some c -> c in
+    
+    let fees = Map.literal [
+        (s.constants.token_x, s.protocol_share.x); 
+        (s.constants.token_y, s.protocol_share.y);
+    ] in 
+
+    (* Send protocol share to fee distributor *)
+    let op_send_x = 
+        cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.x s.constants.token_x in
+    let op_send_y = 
+        cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.y s.constants.token_y in
+    
+    (* Set the fee values in fee distributor *)
+    let params = { epoch = p.epoch; fees = fees } in
+    let op_add_fees = Tezos.transaction params 0mutez fee_distributor in
+
+    [op_send_x; op_send_y; op_add_fees], { s with protocol_share = { x = 0n; y = 0n } }
+
+
+(* Allows for transfer of the dev share of swap fees over to the dev address *)
+let retrieve_dev_share (s: storage) : result =
+    let dev = 
+        match Tezos.call_view "get_dev_address" unit s.constants.factory with
+        | None -> failwith invalid_contract
+        | Some v -> v in
+    let _: unit = if Tezos.get_sender () <> dev then failwith not_authorised else unit in
+
+    (* Send dev share to dev address *)
+    let op_send_x = 
+        cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.x s.constants.token_x in
+    let op_send_y = 
+        cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.y s.constants.token_y in
+
+    [op_send_x; op_send_y], { s with dev_share = { x = 0n; y = 0n } }
+
+
+(* Allows for toggling the pool to be a part of ve-system *)
+let toggle_ve (s: storage) : result =
+    let _: unit = if Tezos.get_sender () <> s.constants.factory then failwith not_authorised else unit in
+    [], { s with is_ve = not s.is_ve }
+
+
 (* Views*)
 
 (* 
@@ -570,3 +624,6 @@ let main ((p, s) : parameter * storage) : result =
         | Update_position p -> update_position s p
         | Call_fa2 p -> call_fa2 s p
         | Increase_observation_count n -> increase_observation_count(s, n)
+        | ForwardFee p -> forward_fee s p
+        | Retrieve_dev_share -> retrieve_dev_share s
+        | Toggle_ve -> toggle_ve s
