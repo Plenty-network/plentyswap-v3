@@ -26,6 +26,10 @@ tezos.setProvider({
         30: 60,
         100: 200,
       }),
+      dev: "tz1eUzpKnk5gKLYw4HWs2sWsynfbT7ypGxNM",
+      protocol_share_bps: 0,
+      dev_share_bps: 2000,
+      voter: "KT1Xa92Nf6evFcEbxMXencfGPmS4urNyn5wd",
     };
 
     // Deploy
