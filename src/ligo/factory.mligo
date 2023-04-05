@@ -39,7 +39,9 @@ type factory_storage = {
 type deploy_pool_params = [@layout:comb] {
     token_x: token;
     token_y: token;
+    initial_tick_index: tick_index;
     fee_bps: nat;
+    extra_slots: nat;
 }
 
 type parameter =
@@ -59,7 +61,7 @@ type return = operation list * factory_storage
 (* Entrypoints *)
 
 let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  =
-    let { token_x; token_y; fee_bps; } = params in
+    let { token_x; token_y; initial_tick_index; fee_bps; extra_slots; } = params in
 
     (* Make sure tez is not selected as a token option, even though the variant allows for it
     for type compatibility with ve-system *)
@@ -82,8 +84,7 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
     let metadata_url = 0x68747470733a2f2f6d657461646174615f75726c2e636f6d in
 
     (* Construct pool storage *)
-    (* TODO: Make extra slots dynamic? *)
-    let pool_storage = default_storage c 0n (Big_map.literal [("", metadata_url)]) in
+    let pool_storage = default_storage c initial_tick_index extra_slots (Big_map.literal [("", metadata_url)]) in
     
     let (op, addr) = create_contract { delegate = None; balance = 0mutez; storage = pool_storage } in
 

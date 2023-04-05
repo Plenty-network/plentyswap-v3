@@ -3,7 +3,9 @@
                     (pair %deploy_pool
                        (or %token_x (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
                        (or %token_y (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
-                       (nat %fee_bps)))
+                       (int %initial_tick_index)
+                       (nat %fee_bps)
+                       (nat %extra_slots)))
                 (or (address %propose_new_admin)
                     (pair %toggle_ve
                        (pair (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
@@ -570,7 +572,7 @@
                                   NIL operation ;
                                   PAIR }
                                 { DROP 2 ; PUSH nat 401 ; FAILWITH } } }
-                       { UNPAIR 3 ;
+                       { UNPAIR 5 ;
                          DUP ;
                          IF_LEFT
                            { IF_LEFT { DROP } { DROP } }
@@ -579,30 +581,29 @@
                          IF_LEFT
                            { IF_LEFT { DROP } { DROP } ; SWAP }
                            { DIG 2 ; DROP 2 ; PUSH nat 405 ; FAILWITH } ;
-                         DUP 4 ;
+                         DUP 6 ;
                          CAR ;
                          CDR ;
                          CDR ;
-                         DUP 4 ;
+                         DUP 5 ;
                          GET ;
                          IF_NONE { PUSH string "invalid_fee_tier" ; FAILWITH } {} ;
                          DUP 2 ;
                          DUP 4 ;
-                         DUP 6 ;
+                         DUP 7 ;
                          SELF_ADDRESS ;
                          PAIR 5 ;
-                         PUSH nat 0 ;
                          PUSH int 0 ;
-                         DUP 8 ;
+                         DUP 9 ;
                          PUSH int -1048575 ;
                          PAIR ;
-                         DUP 10 ;
+                         DUP 11 ;
                          SWAP ;
                          EXEC ;
                          PUSH nat 0 ;
                          PAIR ;
                          PUSH nat 0 ;
-                         DUP 12 ;
+                         DUP 13 ;
                          NEG ;
                          PAIR ;
                          PAIR ;
@@ -619,11 +620,11 @@
                          PAIR ;
                          PAIR ;
                          PUSH int 0 ;
-                         DUP 9 ;
+                         DUP 10 ;
                          PUSH nat 1048575 ;
                          INT ;
                          PAIR ;
-                         DUP 11 ;
+                         DUP 12 ;
                          SWAP ;
                          EXEC ;
                          PUSH nat 0 ;
@@ -632,7 +633,7 @@
                          PUSH int -1048575 ;
                          PAIR ;
                          PAIR ;
-                         DIG 11 ;
+                         DIG 12 ;
                          INT ;
                          PUSH nat 1 ;
                          PAIR ;
@@ -660,10 +661,10 @@
                          SOME ;
                          SWAP ;
                          UPDATE ;
-                         DUP 8 ;
-                         PUSH int 0 ;
+                         DUP 9 ;
+                         DUP 6 ;
                          PAIR ;
-                         DIG 9 ;
+                         DIG 10 ;
                          SWAP ;
                          EXEC ;
                          PAIR ;
@@ -685,8 +686,8 @@
                          PAIR ;
                          PAIR ;
                          PAIR ;
-                         DIG 7 ;
                          DIG 8 ;
+                         DIG 9 ;
                          PAIR ;
                          PUSH nat 0 ;
                          PUSH nat 0 ;
@@ -697,13 +698,13 @@
                          PAIR ;
                          PAIR ;
                          PUSH int -1048575 ;
-                         PUSH int 0 ;
+                         DIG 6 ;
                          PAIR ;
                          PUSH nat 1 ;
-                         DUP 5 ;
+                         DUP 9 ;
                          ADD ;
                          EMPTY_BIG_MAP nat (pair (pair (pair nat nat) (pair int int)) timestamp) ;
-                         DIG 5 ;
+                         DIG 9 ;
                          PAIR ;
                          LEFT (big_map nat (pair (pair (pair nat nat) (pair int int)) timestamp)) ;
                          LOOP_LEFT
