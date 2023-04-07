@@ -250,6 +250,10 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
     else
         (* The fee that would be extracted from selling dy. *)
         let fee = ceildiv (p.dy * p.s.constants.fee_bps) 10000n in
+
+        (* Take out protocol and dev shares from the fee *)
+        let fee, dev_share, protocol_share = take_share (fee, p.fee_shares) in
+
         (* The amount of dy after the swap fee is taken. *)
         let dy_minus_fee = assert_nat (p.dy - fee, internal_fee_more_than_100_percent_err) in
         (* The amount of dy that will be converted to dx as a result of the swap. *)
@@ -269,7 +273,14 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
             let s_new = {p.s with
                 sqrt_price = sqrt_price_new ;
                 cur_tick_index = cur_tick_index_new ;
-                fee_growth = {p.s.fee_growth with y = {x128 = p.s.fee_growth.y.x128 + Bitwise.shift_left fee 128n / p.s.liquidity}}} in
+                fee_growth = {p.s.fee_growth with y = {x128 = p.s.fee_growth.y.x128 + Bitwise.shift_left fee 128n / p.s.liquidity}};
+                dev_share = {
+                    p.s.dev_share with y = p.s.dev_share.y + dev_share
+                };
+                protocol_share = {
+                    p.s.protocol_share with y = p.s.protocol_share.y + protocol_share
+                }
+              } in
             {p with s = s_new ; dy = 0n ; dx = p.dx + dx}
         else
             (* We did cross the tick. *)
@@ -297,6 +308,8 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
             let dy_consumed = ceildiv (dy_minus_fee * 10000n) (one_minus_fee_bps(p.s.constants)) in
             (* Deduct the fee we will actually be paying. *)
             let fee = assert_nat (dy_consumed - dy_minus_fee, internal_impossible_err) in
+            (* Take out protocol and dev shares from the fee *)
+            let fee, dev_share, protocol_share = take_share (fee, p.fee_shares) in
             let fee_growth_y_new = {x128 = p.s.fee_growth.y.x128 + (floordiv (Bitwise.shift_left fee 128n) p.s.liquidity)} in
             let fee_growth_new = {p.s.fee_growth with y=fee_growth_y_new} in
             (* Flip tick cumulative growth. *)
@@ -329,8 +342,14 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
                 ticks = ticks_new ;
                 fee_growth = fee_growth_new ;
                 (* Update liquidity as we enter new tick region. *)
-                liquidity = assert_nat (p.s.liquidity + next_tick.liquidity_net, internal_liquidity_below_zero_err)
-                } in
+                liquidity = assert_nat (p.s.liquidity + next_tick.liquidity_net, internal_liquidity_below_zero_err);
+                dev_share = {
+                    p.s.dev_share with y = p.s.dev_share.y + dev_share
+                };
+                protocol_share = {
+                    p.s.protocol_share with y = p.s.protocol_share.y + protocol_share
+                }
+            } in
             let p_new = {p with s = s_new ; dy = assert_nat (p.dy - dy_consumed, internal_307) ; dx = p.dx + dx} in
             y_to_x_rec p_new
 
