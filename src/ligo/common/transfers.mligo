@@ -1,5 +1,6 @@
-(* Taken and modified from the original code at: 
-  https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/transfers.mligo 
+(* 
+    Taken and modified from the original code at: 
+    https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/transfers.mligo 
 *)
 
 #include "./types.mligo"

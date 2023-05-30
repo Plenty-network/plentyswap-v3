@@ -1,5 +1,6 @@
-(* Taken and modified from the original code at: 
-  https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/helpers.mligo 
+(* 
+    Taken and modified from the original code at: 
+    https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/helpers.mligo 
 *)
 
 #if HELPERS_MLIGO
@@ -32,7 +33,7 @@
             sqrt_price = sqrt(25) * 2^80 = 6044629098073145873530880
 
         And indeed:
-            $ ligo compile-expression --init-file ligo/helpers.mligo cameligo \
+            $ ligo compile expression --init-file ligo/helpers.mligo cameligo \
               "sqrt_price_move_x 100n {x80 = 12089258196146291747061760n} 10n"
             6044629098073145873530880
    *)

@@ -1,5 +1,6 @@
-(* Taken and modified from the original code at: 
-  https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/math.mligo 
+(* 
+    Taken and modified from the original code at: 
+    https://github.com/tezos-checker/segmented-cfmm/blob/master/ligo/math.mligo 
 *)
 
 #if MATH_MLIGO
@@ -17,12 +18,12 @@ let ceildiv_int (numerator : int) (denominator : int) : int = - ((- numerator) /
 let floordiv (numerator : nat) (denominator : nat) : nat =  numerator / denominator
 
 (*
-  When the `sqrt_price` moves from `y` to `x`, calculate the corresponding change to `cur_tick_index`:
-    log_{sqrt(1.0001)}(x/y)
-    2 * ln(x/y) / ln(1.0001)
- *)
+    When the `sqrt_price` moves from `y` to `x`, calculate the corresponding change to `cur_tick_index`:
+        log_{sqrt(1.0001)}(x/y)
+        2 * ln(x/y) / ln(1.0001)
+*)
 (* accurate for x/y in [0.7, 1.5] *)
-(* Note, for simplicity, our sqrt_prices are not on a grid of 0.5 bps, they are on a grid of 10000 (Exp[0.0005] - 1) bps *)
+(* Note, for simplicity, our sqrt_prices are not on a grid of 0.5 bps, they are on a grid of 10000 (Exp[0.00005] - 1) bps *)
 [@inline]
 let floor_log_half_bps ((x, y, out_of_bounds_err) : nat * nat * nat) : int =
     let tenx = 10n * x in

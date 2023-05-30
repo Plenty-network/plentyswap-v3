@@ -1,35 +1,33 @@
 #include "../types.mligo"
 
-// -----------------------------------------------------------------
-// Helper
-// -----------------------------------------------------------------
+(* Helpers *)
 
 [@inline]
 let get_position (position_id, positions : position_id * position_map) : position_state =
-  match Big_map.find_opt position_id positions with
-  | Some position -> position
-  | None -> ([%Michelson ({| { FAILWITH } |} : string * unit -> position_state)]
+    match Big_map.find_opt position_id positions with
+    | Some position -> position
+    | None -> ([%Michelson ({| { FAILWITH } |} : string * unit -> position_state)]
         ("FA2_TOKEN_UNDEFINED", ()) : position_state)
 
 [@inline]
 let check_sender (from_ , token_id, operators : address * token_id * operators): unit =
-  if ((Tezos.get_sender ()) = from_) then unit
-  else
-    let key: operator_param = { owner = from_; operator = (Tezos.get_sender ()); token_id = token_id } in
-    if Big_map.mem key operators then unit
+    if ((Tezos.get_sender ()) = from_) then unit
     else
-     ([%Michelson ({| { FAILWITH } |} : string * unit -> unit)]
-        ("FA2_NOT_OPERATOR", ()) : unit)
+        let key: operator_param = { owner = from_; operator = (Tezos.get_sender ()); token_id = token_id } in
+        if Big_map.mem key operators then unit
+        else
+        ([%Michelson ({| { FAILWITH } |} : string * unit -> unit)]
+            ("FA2_NOT_OPERATOR", ()) : unit)
 
 (* A function that combines the usual FA2's `debit_from` and `credit_to`. *)
 [@inline]
 let change_position_owner (from_, tx, positions: address * transfer_destination * position_map): position_map =
-  if tx.amount = 0n then
-    positions // We allow 0 transfer
-  else
-    let position = get_position(tx.token_id, positions) in
+    if tx.amount = 0n then
+        positions (* We allow 0 transfer *)
+    else
+        let position = get_position(tx.token_id, positions) in
 
-    // Ensure `from_` is the owner of the position.
+    (* Ensure `from_` is the owner of the position. *)
     let owned_amount = if position.owner = from_ then 1n else 0n in
     let _ : unit =
         if (owned_amount = 1n && tx.amount = 1n) then unit
@@ -41,9 +39,7 @@ let change_position_owner (from_, tx, positions: address * transfer_destination 
     Big_map.add tx.token_id new_position positions
 
 
-// -----------------------------------------------------------------
-// Transfer
-// -----------------------------------------------------------------
+(* Transfer *)
 
 let transfer_item (store, ti : storage * transfer_item): storage =
   let transfer_one (store, tx : storage * transfer_destination): storage =
@@ -57,9 +53,7 @@ let transfer (params, store : transfer_params * storage): result =
   (([] : operation list), store)
 
 
-// -----------------------------------------------------------------
-// Balance of
-// -----------------------------------------------------------------
+(* Balance of *)
 
 let balance_of (params, store : balance_request_params * storage): result =
   let positions = store.positions in
@@ -71,9 +65,7 @@ let balance_of (params, store : balance_request_params * storage): result =
   let transfer_operation = Tezos.transaction result 0mutez params.callback in
   (([transfer_operation] : operation list), store)
 
-// -----------------------------------------------------------------
-// Update operators entrypoint
-// -----------------------------------------------------------------
+(* Update operators *)
 
 let update_one (operators, param: operators * update_operator): operators =
   let (operator_update, operator_param) =
