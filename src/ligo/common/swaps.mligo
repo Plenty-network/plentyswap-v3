@@ -119,8 +119,8 @@ let fix_cur_tick_index (cur_tick_index, sqrt_price_new, l : tick_index * x80n * 
                 let next_tick_index = {i = cur_tick_index_new.i + 1} in
                 let next_index_sqrt_price = half_bps_pow (next_tick_index.i, l) in
                 if next_index_sqrt_price.x80 <= sqrt_price_new.x80
-                then fix_cur_tick_index_rec(next_tick_index, next_index_sqrt_price)
-            else cur_tick_index_new
+                    then fix_cur_tick_index_rec(next_tick_index, next_index_sqrt_price)
+                else cur_tick_index_new
     in
     fix_cur_tick_index_rec (cur_tick_index, half_bps_pow (cur_tick_index.i, l))
 
@@ -278,9 +278,8 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
         if cur_tick_index_new.i < next_tick_index.i then
             (* The trade did not push us past the current tick. *)
             (* From 6.16 formula: dx = L * (1 / old sqrt_price - 1 / new sqrt_price), where dx is how X decreases *)
-            // Note [Rounding the swap result]
-            let dx = floordiv (p.s.liquidity * Bitwise.shift_left (assert_nat (sqrt_price_new.x80 - p.s.sqrt_price.x80, internal_bad_sqrt_price_move_y_direction)) 80n)
-                             (sqrt_price_new.x80 * p.s.sqrt_price.x80) in
+            (* Note [Rounding the swap result] *)
+            let dx = floordiv (p.s.liquidity * Bitwise.shift_left (assert_nat (sqrt_price_new.x80 - p.s.sqrt_price.x80, internal_bad_sqrt_price_move_y_direction)) 80n) (sqrt_price_new.x80 * p.s.sqrt_price.x80) in
             let s_new = {p.s with
                 sqrt_price = sqrt_price_new ;
                 cur_tick_index = cur_tick_index_new ;
@@ -301,7 +300,7 @@ let rec y_to_x_rec (p : y_to_x_rec_param) : y_to_x_rec_param =
 
             (* How much dx will we receive for going all the way to cur_tick_witness. *)
             (* From 6.16 formula: dx = L * (1 / old sqrt_price - 1 / new sqrt_price), where dx is how X decreases *)
-            // Note [Rounding the swap result]
+            (* Note [Rounding the swap result] *)
             let dx = floordiv (p.s.liquidity * Bitwise.shift_left (assert_nat (sqrt_price_new.x80 - p.s.sqrt_price.x80, internal_bad_sqrt_price_move_y_direction)) 80n)
                              (sqrt_price_new.x80 * p.s.sqrt_price.x80) in
             (* How much dy does that correspond to. *)

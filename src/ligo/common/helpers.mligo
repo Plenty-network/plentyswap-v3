@@ -39,7 +39,7 @@
    *)
 [@inline]
 let sqrt_price_move_x (liquidity : nat) (sqrt_price_old : x80n) (dx : nat) : x80n =
-    (* floordiv because we want to overstate how much this trade lowers the price *)
+    (* floordiv because we want to overstate (price is falling) how much this trade lowers the price *)
     let sqrt_price_new =
         {x80 = floordiv
             (Bitwise.shift_left (liquidity * sqrt_price_old.x80) 80n)

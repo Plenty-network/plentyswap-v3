@@ -341,6 +341,14 @@ let update_position (s : storage) (p : update_position_param) : result =
     (* Get accumulated fees for this position. *)
     let s, fees, position = collect_fees s p.position_id position in
 
+    (* We only check for ownership in the event that liquidity is being removed. 
+       This nuance is particularly useful in the farm. A position that is staked in a farm can have more liquidity
+       added to it without withdrawal of the position token *)
+    let _ = 
+        if p.liquidity_delta < 0 then 
+            if position.owner <> Tezos.get_sender () then failwith not_authorised else unit
+        else unit in
+
     (* Update liquidity of position. Abort if more than available liquidity is being removed when 
        `p.liquidity_delta` is negative *)
     let liquidity_new = assert_nat (position.liquidity + p.liquidity_delta, position_liquidity_below_zero_err) in
@@ -443,8 +451,10 @@ let get_cumulatives (buffer : timed_cumulatives_buffer) (t : timestamp) : cumula
         (* 
             When no updates to contract are performed, time-weighted accumulators grow
             linearly. Extrapolating to get the value at timestamp in-between.
-                    tick_cumulative(t) and seconds_per_liquidity_cumulative(t) functions produced
+            
+            tick_cumulative(t) and seconds_per_liquidity_cumulative(t) functions produced
             by this extrapolation are continuous.
+            
             1. At [left, right) range found by the binary search above, cumulatives are
             continuous by construction - our extrapolation is linear.
             2. At (right - o, right] range they are also continous, because we will

@@ -460,7 +460,7 @@ type forwardFee_params = { feeDistributor: address; epoch: nat; }
 type result = (operation list) * storage
 
 
-(* Entrypoints *)
+(* Entrypoints for core swap contract *)
 
 type parameter =
     | X_to_y of x_to_y_param
