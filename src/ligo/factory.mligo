@@ -68,6 +68,13 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
     let token_x = match token_x with Tez -> failwith tez_not_allowed | _ -> token_x in
     let token_y = match token_y with Tez -> failwith tez_not_allowed | _ -> token_y in
     
+    (* The pair with the selected fee tier should not have been deployed already *) 
+    let _ = 
+        if (Big_map.mem (token_x, token_y, fee_bps) store.pools) || 
+        (Big_map.mem (token_y, token_x, fee_bps) store.pools) then
+            failwith pool_already_exists
+        else unit in
+
     let tick_spacing = match Map.find_opt fee_bps store.fee_tiers with
     | None -> failwith "invalid_fee_tier" 
     | Some ts -> ts in
