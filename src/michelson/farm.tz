@@ -1,13 +1,16 @@
 { parameter
     (or (or (or (unit %accept_new_admin)
-                (list %claim_reward (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez))))
+                (list %claim_reward
+                   (or (or (address %fa12) (pair %fa2 (address %address) (nat %token_id))) (unit %tez))))
             (or (nat %end_incentive) (address %propose_new_admin)))
         (or (or (pair %stake nat nat)
                 (pair %start_incentive
                    (timestamp %start_time)
                    (timestamp %end_time)
                    (timestamp %claim_deadline)
-                   (or %reward_token (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
+                   (or %reward_token
+                      (or (address %fa12) (pair %fa2 (address %address) (nat %token_id)))
+                      (unit %tez))
                    (nat %reward_amount)
                    (address %refundee)))
             (or (pair %unstake nat nat) (nat %withdraw)))) ;
@@ -21,14 +24,17 @@
                    (pair (pair (pair (pair (timestamp %claim_deadline) (timestamp %end_time))
                                      (nat %n_stakes)
                                      (address %refundee))
-                               (pair (or %reward_token (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
+                               (pair (or %reward_token
+                                        (or (address %fa12) (pair %fa2 (address %address) (nat %token_id)))
+                                        (unit %tez))
                                      (timestamp %start_time))
                                (nat %total_reward)
                                (nat %total_reward_unclaimed))
                          (nat %total_seconds_claimed))))
           (pair (nat %last_incentive_id) (option %proposed_admin address))
           (big_map %rewards
-             (pair (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez)) address)
+             (pair (or (or (address %fa12) (pair %fa2 (address %address) (nat %token_id))) (unit %tez))
+                   address)
              nat)
           (big_map %stakes
              (pair nat nat)
@@ -87,7 +93,7 @@
                  nat)
            { UNPAIR ;
              SWAP ;
-             PUSH nat 407 ;
+             PUSH nat 409 ;
              DUP 2 ;
              CDR ;
              CDR ;
@@ -130,7 +136,7 @@
              DUP 4 ;
              SWAP ;
              EXEC ;
-             PUSH nat 408 ;
+             PUSH nat 410 ;
              DUP 4 ;
              CAR ;
              CAR ;
@@ -351,7 +357,7 @@
                      CDR ;
                      DUP 2 ;
                      GET ;
-                     IF_NONE { PUSH nat 406 ; FAILWITH } {} ;
+                     IF_NONE { PUSH nat 407 ; FAILWITH } {} ;
                      SENDER ;
                      DUP 4 ;
                      CAR ;
@@ -368,7 +374,7 @@
                      NOW ;
                      COMPARE ;
                      LE ;
-                     IF { PUSH nat 414 ; FAILWITH } {} ;
+                     IF { PUSH nat 416 ; FAILWITH } {} ;
                      DUP ;
                      CAR ;
                      CDR ;
@@ -453,7 +459,7 @@
                      DUP 3 ;
                      GET ;
                      IF_NONE
-                       { PUSH nat 406 ; FAILWITH }
+                       { PUSH nat 407 ; FAILWITH }
                        { DUP ;
                          CAR ;
                          CAR ;
@@ -462,7 +468,7 @@
                          NOW ;
                          COMPARE ;
                          GE ;
-                         IF { DROP ; PUSH nat 406 ; FAILWITH } {} } ;
+                         IF { DROP ; PUSH nat 408 ; FAILWITH } {} } ;
                      DUP 4 ;
                      CAR ;
                      CAR ;
@@ -735,14 +741,14 @@
                      COMPARE ;
                      LE ;
                      OR ;
-                     IF { PUSH nat 412 ; FAILWITH } {} ;
+                     IF { PUSH nat 414 ; FAILWITH } {} ;
                      DUP ;
                      GET 3 ;
                      DUP 2 ;
                      GET 5 ;
                      COMPARE ;
                      LE ;
-                     IF { PUSH nat 413 ; FAILWITH } {} ;
+                     IF { PUSH nat 415 ; FAILWITH } {} ;
                      DUP 2 ;
                      CAR ;
                      CDR ;
@@ -828,14 +834,14 @@
                      CDR ;
                      DUP 3 ;
                      GET ;
-                     IF_NONE { PUSH nat 406 ; FAILWITH } {} ;
+                     IF_NONE { PUSH nat 407 ; FAILWITH } {} ;
                      DUP 4 ;
                      CAR ;
                      CDR ;
                      CAR ;
                      DUP 3 ;
                      GET ;
-                     IF_NONE { PUSH nat 409 ; FAILWITH } {} ;
+                     IF_NONE { PUSH nat 411 ; FAILWITH } {} ;
                      DUP 5 ;
                      CDR ;
                      CDR ;
@@ -844,7 +850,7 @@
                      DUP 5 ;
                      PAIR ;
                      GET ;
-                     IF_NONE { PUSH nat 410 ; FAILWITH } {} ;
+                     IF_NONE { PUSH nat 412 ; FAILWITH } {} ;
                      DUP 2 ;
                      CAR ;
                      CDR ;
@@ -1015,7 +1021,7 @@
                      CAR ;
                      DUP 2 ;
                      GET ;
-                     IF_NONE { PUSH nat 409 ; FAILWITH } {} ;
+                     IF_NONE { PUSH nat 411 ; FAILWITH } {} ;
                      SENDER ;
                      DUP 2 ;
                      CAR ;
@@ -1029,7 +1035,7 @@
                      CAR ;
                      COMPARE ;
                      NEQ ;
-                     IF { PUSH nat 411 ; FAILWITH } {} ;
+                     IF { PUSH nat 413 ; FAILWITH } {} ;
                      DUP 2 ;
                      DUP 4 ;
                      CAR ;

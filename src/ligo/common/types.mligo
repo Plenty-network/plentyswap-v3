@@ -12,7 +12,7 @@
    for matching the type with the token-variant in ve-system *)
 type token = 
     | Fa12 of address
-    | Fa2 of address * nat
+    | Fa2 of (address, "address", nat, "token_id") michelson_pair
     | Tez
 
 (* Keeps a positive value with -2^80 precision. *)

@@ -30,8 +30,12 @@
     (pair (pair (pair (pair (pair %constants
                                (address %factory)
                                (nat %fee_bps)
-                               (or %token_x (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
-                               (or %token_y (or (address %fa12) (pair %fa2 address nat)) (unit %tez))
+                               (or %token_x
+                                  (or (address %fa12) (pair %fa2 (address %address) (nat %token_id)))
+                                  (unit %tez))
+                               (or %token_y
+                                  (or (address %fa12) (pair %fa2 (address %address) (nat %token_id)))
+                                  (unit %tez))
                                (nat %tick_spacing))
                             (pair %cumulatives_buffer
                                (pair (nat %first) (nat %last))
@@ -1554,7 +1558,9 @@
                          CDR ;
                          CONTRACT %add_fees
                            (pair (nat %epoch)
-                                 (map %fees (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez)) nat)) ;
+                                 (map %fees
+                                    (or (or (address %fa12) (pair %fa2 (address %address) (nat %token_id))) (unit %tez))
+                                    nat)) ;
                          IF_NONE { PUSH nat 403 ; FAILWITH } {} ;
                          DUP 3 ;
                          CAR ;
@@ -2419,6 +2425,22 @@
                          UPDATE 1 ;
                          UPDATE 2 ;
                          UPDATE 2 ;
+                         PUSH int 0 ;
+                         DUP 5 ;
+                         CAR ;
+                         CAR ;
+                         CDR ;
+                         COMPARE ;
+                         LT ;
+                         IF { SENDER ;
+                              DUP 3 ;
+                              CAR ;
+                              CDR ;
+                              CDR ;
+                              COMPARE ;
+                              NEQ ;
+                              IF { PUSH nat 401 ; FAILWITH } {} }
+                            {} ;
                          PUSH nat 111 ;
                          DUP 5 ;
                          CAR ;
