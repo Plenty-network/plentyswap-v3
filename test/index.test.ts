@@ -3,6 +3,7 @@
 // - The default starting real price Y / X is 1 i.e tick = 0
 
 import setPosition from "./scenarios/core/set_position";
+import updatePosition from "./scenarios/core/update_position";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -12,4 +13,5 @@ jest.setTimeout(30000);
 // This apparently makes the tests run much faster compared to a jest serialisation hook
 describe("unit", () => {
   setPosition();
+  // updatePosition();
 });

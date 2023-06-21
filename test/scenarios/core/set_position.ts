@@ -13,7 +13,7 @@ import Tezos from "../../tezos";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
 import { dateToTimestamp, number } from "../../helpers/math";
-import { DECIMALS, defaultCoreStorage } from "../../helpers/default";
+import { DECIMALS, getDefaultCoreStorage } from "../../helpers/default";
 import { CoreStorage, FA12Storage, FA2Storage, TickState } from "../../types";
 
 const test = () => {
@@ -60,6 +60,8 @@ const test = () => {
       // Deploy the tokens
       tokenX = await tezos.deployContract("fa12", fa12Storage);
       tokenY = await tezos.deployContract("fa2", fa2Storage);
+
+      const defaultCoreStorage = getDefaultCoreStorage();
 
       storage = {
         ...defaultCoreStorage,
@@ -220,6 +222,8 @@ const test = () => {
         n_positions: number(1),
         seconds_outside: number(0),
         tick_cumulative_outside: number(0),
+        // NOTE: Technically, this should have no connection with DECIMALS since the contract stores it
+        // in x128 format, however this works just fine for proving the correctness of the math.
         fee_growth_outside: { x: number(1 * DECIMALS), y: number(2 * DECIMALS) },
         seconds_per_liquidity_outside: number(0),
         sqrt_price: number(sqrtPriceAx80),
@@ -823,7 +827,7 @@ const test = () => {
         upperTickIndex,
         lowerTickWitness: 20, // Invalid witness
         upperTickWitness: lowerTickIndex,
-        liquidity: number(0),
+        liquidity: number(1),
         deadline: NOW + 1000,
         maximumTokensContributed: amount,
       };
@@ -833,7 +837,7 @@ const test = () => {
         tezos.sendBatchOp([
           { kind: OpKind.TRANSACTION, ...PositionManager.setPositionOp(core, options) },
         ])
-      ).rejects.toThrow("110");
+      ).rejects.toThrow("100");
     });
 
     it("fails if invalid upper tick witness is provided", async () => {
@@ -854,7 +858,7 @@ const test = () => {
         upperTickIndex,
         lowerTickWitness: -MAX_TICK,
         upperTickWitness: MAX_TICK, // Invalid witness
-        liquidity: number(0),
+        liquidity: number(1),
         deadline: NOW + 1000,
         maximumTokensContributed: amount,
       };
@@ -864,7 +868,7 @@ const test = () => {
         tezos.sendBatchOp([
           { kind: OpKind.TRANSACTION, ...PositionManager.setPositionOp(core, options) },
         ])
-      ).rejects.toThrow("110");
+      ).rejects.toThrow("100");
     });
   });
 };

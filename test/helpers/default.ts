@@ -172,75 +172,77 @@ ladder.set(
   { v: new BigNumber("1370156647050591448120178"), offset: -118 }
 );
 
-const ticks = new MichelsonMap<number, TickState>();
+export const getDefaultCoreStorage = (): CoreStorage => {
+  const ticks = new MichelsonMap<number, TickState>();
 
-ticks.set(-MAX_TICK, {
-  prev: number(-MAX_TICK - 1),
-  next: number(MAX_TICK),
-  liquidity_net: number(0),
-  n_positions: number(1),
-  seconds_outside: number(0),
-  tick_cumulative_outside: number(0),
-  fee_growth_outside: { x: number(0), y: number(0) },
-  seconds_per_liquidity_outside: number(0),
-  sqrt_price: Tick.computeSqrtPriceFromTick(-MAX_TICK),
-});
+  ticks.set(-MAX_TICK, {
+    prev: number(-MAX_TICK - 1),
+    next: number(MAX_TICK),
+    liquidity_net: number(0),
+    n_positions: number(1),
+    seconds_outside: number(0),
+    tick_cumulative_outside: number(0),
+    fee_growth_outside: { x: number(0), y: number(0) },
+    seconds_per_liquidity_outside: number(0),
+    sqrt_price: Tick.computeSqrtPriceFromTick(-MAX_TICK),
+  });
 
-ticks.set(MAX_TICK, {
-  prev: number(-MAX_TICK),
-  next: number(MAX_TICK + 1),
-  liquidity_net: number(0),
-  n_positions: number(1),
-  seconds_outside: number(0),
-  tick_cumulative_outside: number(0),
-  fee_growth_outside: { x: number(0), y: number(0) },
-  seconds_per_liquidity_outside: number(0),
-  sqrt_price: Tick.computeSqrtPriceFromTick(MAX_TICK),
-});
+  ticks.set(MAX_TICK, {
+    prev: number(-MAX_TICK),
+    next: number(MAX_TICK + 1),
+    liquidity_net: number(0),
+    n_positions: number(1),
+    seconds_outside: number(0),
+    tick_cumulative_outside: number(0),
+    fee_growth_outside: { x: number(0), y: number(0) },
+    seconds_per_liquidity_outside: number(0),
+    sqrt_price: Tick.computeSqrtPriceFromTick(MAX_TICK),
+  });
 
-const timedCumulatives = new MichelsonMap<number, TimedCumulatives>();
+  const timedCumulatives = new MichelsonMap<number, TimedCumulatives>();
 
-timedCumulatives.set(0, {
-  time: 0,
-  tick: { sum: number(0), block_start_value: number(0) },
-  spl: { sum: number(0), block_start_liquidity_value: number(0) },
-});
+  timedCumulatives.set(0, {
+    time: 0,
+    tick: { sum: number(0), block_start_value: number(0) },
+    spl: { sum: number(0), block_start_liquidity_value: number(0) },
+  });
 
-export const defaultCoreStorage: CoreStorage = {
-  liquidity: number(0),
-  sqrt_price: Tick.computeSqrtPriceFromTick(0),
-  cur_tick_index: number(0),
-  cur_tick_witness: number(-MAX_TICK),
-  fee_growth: {
-    x: number(0),
-    y: number(0),
-  },
-  dev_share: {
-    x: number(0),
-    y: number(0),
-  },
-  protocol_share: {
-    x: number(0),
-    y: number(0),
-  },
-  ticks,
-  positions: new MichelsonMap(),
-  cumulatives_buffer: {
-    map: timedCumulatives,
-    first: number(0),
-    last: number(0),
-    reserved_length: number(1),
-  },
-  metadata: new MichelsonMap(),
-  new_position_id: number(0),
-  operators: new MichelsonMap(),
-  constants: {
-    factory: "tz1PWmqx43ZWaG4Hsze5dN3MHKhqxz19CDoG", // Dummy
-    fee_bps: number(5), // 5 bps
-    token_x: { tez: UnitValue },
-    token_y: { tez: UnitValue },
-    tick_spacing: number(10),
-  },
-  ladder,
-  is_ve: false,
+  return {
+    liquidity: number(0),
+    sqrt_price: Tick.computeSqrtPriceFromTick(0),
+    cur_tick_index: number(0),
+    cur_tick_witness: number(-MAX_TICK),
+    fee_growth: {
+      x: number(0),
+      y: number(0),
+    },
+    dev_share: {
+      x: number(0),
+      y: number(0),
+    },
+    protocol_share: {
+      x: number(0),
+      y: number(0),
+    },
+    ticks,
+    positions: new MichelsonMap(),
+    cumulatives_buffer: {
+      map: timedCumulatives,
+      first: number(0),
+      last: number(0),
+      reserved_length: number(1),
+    },
+    metadata: new MichelsonMap(),
+    new_position_id: number(0),
+    operators: new MichelsonMap(),
+    constants: {
+      factory: "tz1PWmqx43ZWaG4Hsze5dN3MHKhqxz19CDoG", // Dummy
+      fee_bps: number(5), // 5 bps
+      token_x: { tez: UnitValue },
+      token_y: { tez: UnitValue },
+      tick_spacing: number(10),
+    },
+    ladder,
+    is_ve: false,
+  };
 };

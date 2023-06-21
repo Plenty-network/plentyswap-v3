@@ -94,7 +94,7 @@ export interface CoreStorage {
     y: BigNumber;
   };
   ticks: MichelsonMap<number, TickState>;
-  positions: MichelsonMap<any, any>;
+  positions: MichelsonMap<number, Position>;
   cumulatives_buffer: {
     map: MichelsonMap<number, TimedCumulatives>;
     first: BigNumber;
