@@ -6,6 +6,7 @@ const aliasToDirectory: { [key: string]: string } = {
   factory: `${__dirname}/../../src/michelson/swap/factory.tz`,
   fa12: `${__dirname}/../dummy/fa12.tz`,
   fa2: `${__dirname}/../dummy/fa2.tz`,
+  dummyFactory: `${__dirname}/../dummy/factory.tz`,
 };
 
 export const getContractCode = (alias: string) => {

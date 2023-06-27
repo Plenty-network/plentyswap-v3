@@ -1,0 +1,5 @@
+{ parameter unit ;
+  storage (pair nat nat) ;
+  code { DROP ; PUSH string "Not allowed" ; FAILWITH } ;
+  view "get_fee_shares" unit (pair nat nat) { CDR } }
+

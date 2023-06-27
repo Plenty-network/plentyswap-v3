@@ -114,3 +114,10 @@ export interface CoreStorage {
   ladder: MichelsonMap<any, any>;
   is_ve: boolean;
 }
+
+export interface XToYParams {
+  dx: BigNumber;
+  deadline: number;
+  min_dy: BigNumber;
+  to_dy: string;
+}
