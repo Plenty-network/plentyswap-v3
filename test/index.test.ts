@@ -13,7 +13,7 @@ jest.setTimeout(30000);
 
 // This apparently makes the tests run much faster compared to a jest serialisation hook
 describe("unit", () => {
-  // setPosition();
-  // updatePosition();
+  setPosition();
+  updatePosition();
   xToY();
 });

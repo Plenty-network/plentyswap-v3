@@ -70,8 +70,7 @@
                          (nat %seconds_per_liquidity_outside)
                          (nat %sqrt_price))
                    (int %tick_cumulative_outside)))) ;
-  code { UNIT ;
-         LAMBDA
+  code { LAMBDA
            (pair nat nat)
            nat
            { UNPAIR ;
@@ -329,12 +328,10 @@
          DUP 3 ;
          APPLY ;
          LAMBDA
-           (pair unit (pair address bool))
+           (pair address bool)
            (pair nat nat)
            { UNPAIR ;
-             SWAP ;
-             UNPAIR ;
-             DIG 2 ;
+             UNIT ;
              VIEW "get_fee_shares" (pair nat nat) ;
              IF_NONE
                { DROP ; PUSH nat 403 ; FAILWITH }
@@ -343,8 +340,6 @@
                  IF { SWAP } { SWAP ; DROP ; PUSH nat 0 } ;
                  SWAP ;
                  PAIR } } ;
-         DUP 9 ;
-         APPLY ;
          LAMBDA
            (pair (lambda (pair int (big_map (pair nat bool) (pair int nat))) nat)
                  (pair (pair (pair (big_map
@@ -1221,7 +1216,7 @@
          APPLY ;
          DIG 10 ;
          DROP ;
-         DIG 12 ;
+         DIG 11 ;
          UNPAIR ;
          PUSH mutez 0 ;
          AMOUNT ;
@@ -1377,9 +1372,7 @@
                        { DIG 2 ;
                          DROP ;
                          IF_LEFT
-                           { DIG 2 ;
-                             DROP ;
-                             DUP ;
+                           { DUP ;
                              CAR ;
                              MAP { DUP 3 ;
                                    CDR ;
@@ -1410,9 +1403,7 @@
                              DIG 2 ;
                              CONS }
                            { IF_LEFT
-                               { DIG 2 ;
-                                 DROP ;
-                                 ITER { SWAP ;
+                               { ITER { SWAP ;
                                         DUP 2 ;
                                         CDR ;
                                         ITER { SWAP ;
@@ -1515,7 +1506,7 @@
                                  CDR ;
                                  CDR ;
                                  SWAP ;
-                                 ITER { IF_LEFT { DUP 4 ; SOME } { NONE unit } ;
+                                 ITER { IF_LEFT { UNIT ; SOME } { NONE unit } ;
                                         DUP 2 ;
                                         CAR ;
                                         SENDER ;
@@ -1526,8 +1517,6 @@
                                         SWAP ;
                                         DIG 2 ;
                                         UPDATE } ;
-                                 DIG 2 ;
-                                 DROP ;
                                  DUP 2 ;
                                  DIG 2 ;
                                  CDR ;
@@ -1547,7 +1536,7 @@
                          CAR ;
                          CAR ;
                          CAR ;
-                         DIG 4 ;
+                         UNIT ;
                          VIEW "get_voter_address" address ;
                          IF_NONE { PUSH nat 403 ; FAILWITH } {} ;
                          SENDER ;
@@ -1662,8 +1651,7 @@
                          CONS } }
                    { IF_LEFT
                        { DIG 2 ;
-                         DIG 3 ;
-                         DROP 2 ;
+                         DROP ;
                          DUP 2 ;
                          CAR ;
                          CAR ;
@@ -1753,7 +1741,7 @@
                          CAR ;
                          CAR ;
                          CAR ;
-                         DIG 3 ;
+                         UNIT ;
                          VIEW "get_dev_address" address ;
                          IF_NONE { PUSH nat 403 ; FAILWITH } {} ;
                          DUP ;
@@ -1817,9 +1805,7 @@
                          DIG 2 ;
                          CONS } } ;
                  PAIR }
-               { DIG 13 ;
-                 DROP ;
-                 IF_LEFT
+               { IF_LEFT
                    { DIG 4 ;
                      DIG 7 ;
                      DIG 8 ;
@@ -2339,50 +2325,60 @@
                          CDR ;
                          GET ;
                          IF_NONE { UNIT ; PUSH string "FA2_TOKEN_UNDEFINED" ; PAIR ; FAILWITH } {} ;
-                         DUP ;
-                         CDR ;
-                         DUP 2 ;
-                         CAR ;
-                         CDR ;
-                         CAR ;
-                         DUP 5 ;
-                         PAIR 3 ;
-                         DIG 5 ;
-                         SWAP ;
-                         EXEC ;
-                         PUSH nat 128 ;
+                         PUSH int 0 ;
                          DUP 3 ;
                          CAR ;
                          CAR ;
                          CDR ;
-                         PUSH nat 317 ;
-                         DUP 5 ;
-                         CAR ;
+                         COMPARE ;
+                         LT ;
+                         IF { SENDER ;
+                              DUP 2 ;
+                              CAR ;
+                              CDR ;
+                              CDR ;
+                              COMPARE ;
+                              NEQ ;
+                              IF { PUSH nat 401 ; FAILWITH } {} }
+                            {} ;
+                         PUSH nat 111 ;
+                         DUP 3 ;
                          CAR ;
                          CAR ;
                          CDR ;
-                         DUP 5 ;
+                         DUP 3 ;
+                         CAR ;
+                         CAR ;
                          CDR ;
-                         SUB ;
+                         ADD ;
                          PAIR ;
-                         DUP 11 ;
+                         DUP 9 ;
                          SWAP ;
                          EXEC ;
-                         MUL ;
-                         LSR ;
+                         DUP 2 ;
+                         CDR ;
+                         DUP 3 ;
+                         CAR ;
+                         CDR ;
+                         CAR ;
+                         DUP 6 ;
+                         PAIR 3 ;
+                         DIG 6 ;
+                         SWAP ;
+                         EXEC ;
                          PUSH nat 128 ;
                          DUP 4 ;
                          CAR ;
                          CAR ;
                          CDR ;
-                         PUSH nat 316 ;
+                         PUSH nat 317 ;
                          DUP 6 ;
                          CAR ;
                          CAR ;
                          CAR ;
-                         CAR ;
-                         DUP 6 ;
-                         CAR ;
+                         CDR ;
+                         DUP 5 ;
+                         CDR ;
                          SUB ;
                          PAIR ;
                          DUP 12 ;
@@ -2390,9 +2386,29 @@
                          EXEC ;
                          MUL ;
                          LSR ;
+                         PUSH nat 128 ;
+                         DUP 5 ;
+                         CAR ;
+                         CAR ;
+                         CDR ;
+                         PUSH nat 316 ;
+                         DUP 7 ;
+                         CAR ;
+                         CAR ;
+                         CAR ;
+                         CAR ;
+                         DUP 6 ;
+                         CAR ;
+                         SUB ;
                          PAIR ;
-                         DUP 3 ;
-                         DIG 3 ;
+                         DIG 12 ;
+                         SWAP ;
+                         EXEC ;
+                         MUL ;
+                         LSR ;
+                         PAIR ;
+                         DUP 4 ;
+                         DIG 4 ;
                          CAR ;
                          DUP ;
                          CAR ;
@@ -2400,20 +2416,20 @@
                          UPDATE 1 ;
                          UPDATE 1 ;
                          UPDATE 1 ;
-                         DUP 4 ;
                          DUP 5 ;
+                         DUP 6 ;
                          CDR ;
                          DUP ;
                          CDR ;
                          DUP ;
                          CAR ;
-                         DIG 7 ;
+                         DIG 8 ;
                          CDR ;
                          CDR ;
                          CAR ;
                          CAR ;
                          DUP 6 ;
-                         DUP 9 ;
+                         DUP 10 ;
                          CAR ;
                          CDR ;
                          CDR ;
@@ -2425,47 +2441,17 @@
                          UPDATE 1 ;
                          UPDATE 2 ;
                          UPDATE 2 ;
-                         PUSH int 0 ;
-                         DUP 5 ;
-                         CAR ;
-                         CAR ;
-                         CDR ;
-                         COMPARE ;
-                         LT ;
-                         IF { SENDER ;
-                              DUP 3 ;
-                              CAR ;
-                              CDR ;
-                              CDR ;
-                              COMPARE ;
-                              NEQ ;
-                              IF { PUSH nat 401 ; FAILWITH } {} }
-                            {} ;
-                         PUSH nat 111 ;
-                         DUP 5 ;
-                         CAR ;
-                         CAR ;
-                         CDR ;
-                         DUP 4 ;
-                         CAR ;
-                         CAR ;
-                         CDR ;
-                         ADD ;
-                         PAIR ;
-                         DIG 8 ;
-                         SWAP ;
-                         EXEC ;
-                         DUP 3 ;
-                         DIG 3 ;
+                         DUP 2 ;
+                         DIG 2 ;
                          CAR ;
                          DUP ;
                          CAR ;
-                         DUP 4 ;
+                         DUP 6 ;
                          UPDATE 2 ;
                          UPDATE 1 ;
                          UPDATE 1 ;
                          PUSH nat 0 ;
-                         DIG 2 ;
+                         DIG 4 ;
                          COMPARE ;
                          EQ ;
                          IF { PUSH int -1 } { PUSH int 0 } ;
@@ -3577,8 +3563,7 @@
              DIG 4 ;
              DIG 5 ;
              DIG 6 ;
-             DIG 13 ;
-             DROP 6 ;
+             DROP 5 ;
              DUP ;
              CAR ;
              CAR ;

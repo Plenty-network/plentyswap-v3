@@ -338,8 +338,7 @@ let update_position (s : storage) (p : update_position_param) : result =
 
     (* Grab the existing position *)
     let position = get_position (p.position_id, s.positions) in
-    (* Get accumulated fees for this position. *)
-    let s, fees, position = collect_fees s p.position_id position in
+    
 
     (* We only check for ownership in the event that liquidity is being removed. 
        This nuance is particularly useful in the farm. A position that is staked in a farm can have more liquidity
@@ -352,6 +351,10 @@ let update_position (s : storage) (p : update_position_param) : result =
     (* Update liquidity of position. Abort if more than available liquidity is being removed when 
        `p.liquidity_delta` is negative *)
     let liquidity_new = assert_nat (position.liquidity + p.liquidity_delta, position_liquidity_below_zero_err) in
+
+    (* Get accumulated fees for this position. *)
+    let s, fees, position = collect_fees s p.position_id position in
+    
     let position = {position with liquidity = liquidity_new} in
 
     (* If the position is being emptied out, decrease the number of positions for the associated ticks by 1 *)
