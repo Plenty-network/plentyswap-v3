@@ -867,6 +867,102 @@ const test = () => {
       expect(aliceBalanceY).toEqual(number(100 * DECIMALS - 1));
     });
 
+    it("fails if deadline is crossed", async () => {
+      storage.is_ve = true; // Allow for protocol share
+
+      const lowerTickIndex = -10;
+      const upperTickIndex = 10;
+
+      storage.cur_tick_witness = number(-10);
+
+      const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
+      const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
+      const sqrtPriceCx80 = storage.sqrt_price;
+
+      // Initialise liquidity for swap
+      const liquidity = Liquidity.computeLiquidityFromAmount(
+        {
+          x: number(100 * DECIMALS),
+          y: number(100 * DECIMALS),
+        },
+        sqrtPriceCx80,
+        sqrtPriceAx80,
+        sqrtPriceBx80
+      );
+
+      const lowerTick: TickState = {
+        prev: number(-MAX_TICK),
+        next: number(10),
+        liquidity_net: liquidity,
+        n_positions: number(1),
+        seconds_outside: number(0),
+        tick_cumulative_outside: number(0),
+        fee_growth_outside: { x: number(0), y: number(0) },
+        seconds_per_liquidity_outside: number(0),
+        sqrt_price: number(sqrtPriceAx80),
+      };
+
+      const upperTick: TickState = {
+        prev: number(-10),
+        next: number(MAX_TICK),
+        liquidity_net: liquidity.multipliedBy(-1),
+        n_positions: number(1),
+        seconds_outside: number(0),
+        tick_cumulative_outside: number(0),
+        fee_growth_outside: { x: number(0), y: number(0) },
+        seconds_per_liquidity_outside: number(0),
+        sqrt_price: number(sqrtPriceBx80),
+      };
+
+      storage.ticks.set(lowerTickIndex, lowerTick);
+      storage.ticks.set(upperTickIndex, upperTick);
+
+      storage.liquidity = liquidity;
+
+      // 1500 bps for dev and 2000 for the protocol
+      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+
+      storage.constants.factory = factory.address;
+
+      const core = await tezos.deployContract("core", storage);
+
+      // Maximum amount of X for which the entirety of Y can be depleted
+      let xMax = Liquidity.computeAmountXFromLiquidity(liquidity, sqrtPriceAx80, sqrtPriceCx80);
+
+      const params: XToYParams = {
+        dx: Math2.floor(xMax.multipliedBy(0.1)),
+        to_dy: accounts.alice.pkh,
+        min_dy: number(0),
+        deadline: NOW - 1000, // Deadline is crossed
+      };
+
+      // Transfer token y to core so it can return it back
+      await tezos.sendBatchOp([
+        {
+          kind: OpKind.TRANSACTION,
+          ...tokenY.methodsObject
+            .transfer([
+              {
+                from_: accounts.alice.pkh,
+                txs: [{ to_: core.address, token_id: 0, amount: number(100 * DECIMALS) }],
+              },
+            ])
+            .toTransferParams(),
+        },
+      ]);
+
+      // When alice makes a swap with the deadline being crossed, the txn fails
+      await expect(
+        tezos.sendBatchOp([
+          {
+            kind: OpKind.TRANSACTION,
+            ...Approvals.approveFA12(tokenX, { spender: core.address, value: params.dx }),
+          },
+          { kind: OpKind.TRANSACTION, ...core.methodsObject.x_to_y(params).toTransferParams() },
+        ])
+      ).rejects.toThrow();
+    });
+
     it("fails if dy received is less than requested minimum dy", async () => {
       storage.is_ve = true; // Allow for protocol share
 
