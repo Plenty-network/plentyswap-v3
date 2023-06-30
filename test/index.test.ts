@@ -5,6 +5,7 @@
 import setPosition from "./scenarios/core/set_position";
 import updatePosition from "./scenarios/core/update_position";
 import xToY from "./scenarios/core/x_to_y";
+import yToX from "./scenarios/core/y_to_x";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -16,4 +17,5 @@ describe("unit", () => {
   setPosition();
   updatePosition();
   xToY();
+  yToX();
 });

@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/Plenty-network/plentyswap-v3#readme",
   "dependencies": {
-    "@plenty-labs/v3-sdk": "^1.0.18",
+    "@plenty-labs/v3-sdk": "^1.0.19",
     "@taquito/signer": "^15.1.0",
     "@taquito/taquito": "^15.1.0",
     "axios": "^1.4.0",

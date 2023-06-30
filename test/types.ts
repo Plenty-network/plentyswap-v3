@@ -121,3 +121,10 @@ export interface XToYParams {
   min_dy: BigNumber;
   to_dy: string;
 }
+
+export interface YToXParams {
+  dy: BigNumber;
+  deadline: number;
+  min_dx: BigNumber;
+  to_dx: string;
+}
