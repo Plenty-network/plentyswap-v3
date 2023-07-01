@@ -547,9 +547,16 @@ let forward_fee (s: storage) (p: forwardFee_params) : result =
         | None -> failwith invalid_contract
         | Some c -> c in
     
+    (* Takes the local `token` type used in the cfmm and builds the interop type *)
+    let resolve_token (local: token) = 
+        match local with
+        | Fa12 addr -> Fa_12(addr)
+        | Fa2 (addr, token_id) -> Fa_2(addr, token_id) 
+    in
+
     let fees = Map.literal [
-        (s.constants.token_x, s.protocol_share.x); 
-        (s.constants.token_y, s.protocol_share.y);
+        (resolve_token s.constants.token_x, s.protocol_share.x); 
+        (resolve_token s.constants.token_y, s.protocol_share.y);
     ] in 
 
     (* Send protocol share to fee distributor *)

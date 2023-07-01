@@ -62,11 +62,6 @@ type return = operation list * factory_storage
 
 let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  =
     let { token_x; token_y; initial_tick_index; fee_bps; extra_slots; } = params in
-
-    (* Make sure tez is not selected as a token option, even though the variant allows for it
-    for type compatibility with ve-system *)
-    let token_x = match token_x with Tez -> failwith tez_not_allowed | _ -> token_x in
-    let token_y = match token_y with Tez -> failwith tez_not_allowed | _ -> token_y in
     
     (* The pair with the selected fee tier should not have been deployed already *) 
     let _ = 

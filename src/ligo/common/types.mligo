@@ -8,11 +8,14 @@
 #define TYPES_MLIGO
 
 (* Token standards *)
-(* Note: Tez pairs are not possible in segmented cfmm. The value constructor is only added 
-   for matching the type with the token-variant in ve-system *)
 type token = 
     | Fa12 of address
     | Fa2 of (address, "address", nat, "token_id") michelson_pair
+
+(* Required in forward_fee for interop with ve-system's token type *)
+type token_interop = 
+    | [@annot fa12] Fa_12 of address
+    | [@annot fa2] Fa_2 of address * nat
     | Tez
 
 (* Keeps a positive value with -2^80 precision. *)
@@ -453,7 +456,7 @@ type position_info = {
     upper_tick_index : tick_index;
 }
 
-type add_fees_params = { epoch: nat; fees: (token, nat) map; }
+type add_fees_params = { epoch: nat; fees: (token_interop, nat) map; }
 
 type forwardFee_params = { feeDistributor: address; epoch: nat; }
 
