@@ -6,6 +6,7 @@ import setPosition from "./scenarios/core/set_position";
 import updatePosition from "./scenarios/core/update_position";
 import xToY from "./scenarios/core/x_to_y";
 import yToX from "./scenarios/core/y_to_x";
+import UpdateTimedCumulatives from "./scenarios/core/update_timed_cumulatives";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -18,4 +19,5 @@ describe("unit", () => {
   updatePosition();
   xToY();
   yToX();
+  UpdateTimedCumulatives();
 });

@@ -238,8 +238,8 @@ export const getDefaultCoreStorage = (): CoreStorage => {
     constants: {
       factory: "tz1PWmqx43ZWaG4Hsze5dN3MHKhqxz19CDoG", // Dummy
       fee_bps: number(5), // 5 bps
-      token_x: { tez: UnitValue },
-      token_y: { tez: UnitValue },
+      token_x: { fa12: "tz1PWmqx43ZWaG4Hsze5dN3MHKhqxz19CDoG" }, // Dummy
+      token_y: { fa12: "tz1PWmqx43ZWaG4Hsze5dN3MHKhqxz19CDoG" }, // Dummy
       tick_spacing: number(10),
     },
     ladder,
