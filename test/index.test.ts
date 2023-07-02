@@ -11,6 +11,9 @@ import IncreaseObservationCount from "./scenarios/core/increase_observation_coun
 import ForwardFee from "./scenarios/core/forwardFee";
 import ToggleVe from "./scenarios/core/toggle_ve";
 import RetrieveDevShare from "./scenarios/core/retrieve_dev_share";
+import Transfer from "./scenarios/core/fa2/transfer";
+import UpdateOperators from "./scenarios/core/fa2/update_operators";
+import BalanceOf from "./scenarios/core/fa2/balance_of";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -19,13 +22,16 @@ jest.setTimeout(30000);
 
 // This apparently makes the tests run much faster compared to a jest serialisation hook
 describe("unit", () => {
-  // setPosition();
-  // updatePosition();
-  // xToY();
-  // yToX();
-  // UpdateTimedCumulatives();
-  // IncreaseObservationCount();
+  setPosition();
+  updatePosition();
+  xToY();
+  yToX();
+  UpdateTimedCumulatives();
+  IncreaseObservationCount();
   ForwardFee();
   ToggleVe();
   RetrieveDevShare();
+  Transfer();
+  UpdateOperators();
+  BalanceOf();
 });

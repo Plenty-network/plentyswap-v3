@@ -1,0 +1,26 @@
+{ parameter
+    (or (pair %call address (list (pair (address %owner) (nat %token_id))))
+        (list %set (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))) ;
+  storage (list nat) ;
+  code { UNPAIR ;
+         IF_LEFT
+           { UNPAIR ;
+             CONTRACT %balance_of
+               (pair (list %requests (pair (address %owner) (nat %token_id)))
+                     (contract %callback
+                        (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance))))) ;
+             IF_NONE
+               { DROP 2 ; PUSH int 0 ; FAILWITH }
+               { SELF %set ;
+                 DIG 2 ;
+                 PAIR ;
+                 DIG 2 ;
+                 NIL operation ;
+                 DIG 3 ;
+                 PUSH mutez 0 ;
+                 DIG 4 ;
+                 TRANSFER_TOKENS ;
+                 CONS ;
+                 PAIR } }
+           { SWAP ; DROP ; MAP { CDR } ; NIL operation ; PAIR } } }
+

@@ -6,8 +6,7 @@
 let get_position (position_id, positions : position_id * position_map) : position_state =
     match Big_map.find_opt position_id positions with
     | Some position -> position
-    | None -> ([%Michelson ({| { FAILWITH } |} : string * unit -> position_state)]
-        ("FA2_TOKEN_UNDEFINED", ()) : position_state)
+    | None -> failwith "FA2_TOKEN_UNDEFINED"
 
 [@inline]
 let check_sender (from_ , token_id, operators : address * token_id * operators): unit =
@@ -15,9 +14,7 @@ let check_sender (from_ , token_id, operators : address * token_id * operators):
     else
         let key: operator_param = { owner = from_; operator = (Tezos.get_sender ()); token_id = token_id } in
         if Big_map.mem key operators then unit
-        else
-        ([%Michelson ({| { FAILWITH } |} : string * unit -> unit)]
-            ("FA2_NOT_OPERATOR", ()) : unit)
+        else failwith "FA2_NOT_OPERATOR"
 
 (* A function that combines the usual FA2's `debit_from` and `credit_to`. *)
 [@inline]
@@ -31,9 +28,7 @@ let change_position_owner (from_, tx, positions: address * transfer_destination 
     let owned_amount = if position.owner = from_ then 1n else 0n in
     let _ : unit =
         if (owned_amount = 1n && tx.amount = 1n) then unit
-        else
-          ([%Michelson ({| { FAILWITH } |} : string * (nat * nat) -> unit)]
-            ("FA2_INSUFFICIENT_BALANCE", (tx.amount, owned_amount))) in
+        else failwith "FA2_INSUFFICIENT_BALANCE" in
 
     let new_position = { position with owner = tx.to_ } in
     Big_map.add tx.token_id new_position positions
@@ -74,8 +69,7 @@ let update_one (operators, param: operators * update_operator): operators =
     | Remove_operator p -> ((None : unit option), p) in
   let _ : unit =
     if ((Tezos.get_sender ()) = operator_param.owner) then unit
-    else ([%Michelson ({| { FAILWITH } |} : string * unit -> unit)]
-          ("FA2_NOT_OWNER", ()) : unit)
+    else failwith "FA2_NOT_OWNER"
   in Big_map.update operator_param operator_update operators
 
 let update_operators (params, store : update_operators_param * storage):result =
