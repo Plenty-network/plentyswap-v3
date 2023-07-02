@@ -128,7 +128,10 @@ const test = () => {
       );
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -277,7 +280,10 @@ const test = () => {
       );
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -434,7 +440,10 @@ const test = () => {
       );
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -620,7 +629,10 @@ const test = () => {
       );
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -811,7 +823,10 @@ const test = () => {
       storage.liquidity = liquidity;
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -918,7 +933,10 @@ const test = () => {
       storage.liquidity = liquidity;
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -1014,7 +1032,10 @@ const test = () => {
       storage.liquidity = liquidity;
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -1110,7 +1131,10 @@ const test = () => {
       storage.liquidity = liquidity;
 
       // Shares exceed 100%
-      const factory = await tezos.deployContract("dummyFactory", { 0: 6500, 1: 4500 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 6500, 2: 4500 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 
@@ -1208,7 +1232,10 @@ const test = () => {
       storage.liquidity = liquidity;
 
       // 1500 bps for dev and 2000 for the protocol
-      const factory = await tezos.deployContract("dummyFactory", { 0: 1500, 1: 2000 });
+      const factory = await tezos.deployContract("dummyFactory", {
+        shares: { 1: 1500, 2: 2000 },
+        address: accounts.alice.pkh,
+      });
 
       storage.constants.factory = factory.address;
 

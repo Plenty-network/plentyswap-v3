@@ -1,5 +1,6 @@
 { parameter unit ;
-  storage (pair nat nat) ;
+  storage (pair (address %address) (pair %shares nat nat)) ;
   code { DROP ; PUSH string "Not allowed" ; FAILWITH } ;
-  view "get_fee_shares" unit (pair nat nat) { CDR } }
+  view "get_fee_shares" unit (pair nat nat) { CDR ; CDR } ;
+  view "get_voter_address" unit address { CDR ; CAR } }
 
