@@ -1,11 +1,10 @@
-import { DefaultContractType, MichelsonMap, OpKind } from "@taquito/taquito";
+import { OpKind } from "@taquito/taquito";
 
 import Tezos from "../../tezos";
-import { number } from "../../helpers/math";
+import { CoreStorage } from "../../types";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
-import { CoreStorage, FA12Storage, FA2Storage } from "../../types";
-import { DECIMALS, getDefaultCoreStorage } from "../../helpers/default";
+import { getDefaultCoreStorage } from "../../helpers/default";
 
 const test = () => {
   describe("core.toggle_ve", () => {

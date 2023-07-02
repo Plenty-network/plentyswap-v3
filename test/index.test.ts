@@ -10,6 +10,7 @@ import UpdateTimedCumulatives from "./scenarios/core/update_timed_cumulatives";
 import IncreaseObservationCount from "./scenarios/core/increase_observation_count";
 import ForwardFee from "./scenarios/core/forwardFee";
 import ToggleVe from "./scenarios/core/toggle_ve";
+import RetrieveDevShare from "./scenarios/core/retrieve_dev_share";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -26,4 +27,5 @@ describe("unit", () => {
   // IncreaseObservationCount();
   ForwardFee();
   ToggleVe();
+  RetrieveDevShare();
 });
