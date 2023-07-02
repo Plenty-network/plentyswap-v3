@@ -1,0 +1,14 @@
+{ parameter
+    (or (pair %add_fees
+           (nat %epoch)
+           (map %fees (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez)) nat))
+        (unit %default)) ;
+  storage
+    (option
+       (pair (nat %epoch)
+             (map %fees (or (or (address %fa12) (pair %fa2 address nat)) (unit %tez)) nat))) ;
+  code { CAR ;
+         IF_LEFT { SOME } { DROP ; PUSH string "Not allowed" ; FAILWITH } ;
+         NIL operation ;
+         PAIR } }
+
