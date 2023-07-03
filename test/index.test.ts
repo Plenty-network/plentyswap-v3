@@ -14,6 +14,9 @@ import RetrieveDevShare from "./scenarios/core/retrieve_dev_share";
 import Transfer from "./scenarios/core/fa2/transfer";
 import UpdateOperators from "./scenarios/core/fa2/update_operators";
 import BalanceOf from "./scenarios/core/fa2/balance_of";
+import Observe from "./scenarios/core/observe";
+import GetPositionInfo from "./scenarios/core/get_position_info";
+import SnapshotCumuInside from "./scenarios/core/snapshot_cumulatives_inside";
 
 // Library configuration for running test
 import BigNumber from "bignumber.js";
@@ -22,16 +25,19 @@ jest.setTimeout(30000);
 
 // This apparently makes the tests run much faster compared to a jest serialisation hook
 describe("unit", () => {
-  setPosition();
-  updatePosition();
-  xToY();
-  yToX();
-  UpdateTimedCumulatives();
-  IncreaseObservationCount();
-  ForwardFee();
-  ToggleVe();
-  RetrieveDevShare();
-  Transfer();
-  UpdateOperators();
-  BalanceOf();
+  // setPosition();
+  // updatePosition();
+  // xToY();
+  // yToX();
+  // UpdateTimedCumulatives();
+  // IncreaseObservationCount();
+  // ForwardFee();
+  // ToggleVe();
+  // RetrieveDevShare();
+  // Transfer();
+  // UpdateOperators();
+  // BalanceOf();
+  // Observe();
+  // GetPositionInfo();
+  SnapshotCumuInside();
 });
