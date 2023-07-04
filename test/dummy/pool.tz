@@ -1,0 +1,9 @@
+{ parameter (or (unit %default) (unit %toggle_ve)) ;
+  storage (option bool) ;
+  code { CAR ;
+         IF_LEFT
+           { DROP ; PUSH string "Not allowed" ; FAILWITH }
+           { DROP ; PUSH bool True ; SOME } ;
+         NIL operation ;
+         PAIR } }
+

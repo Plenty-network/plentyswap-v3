@@ -1,4 +1,5 @@
 #include "./common/types.mligo"
+#include "./common/consts.mligo"
 #include "./common/defaults.mligo"
 #include "./common/errors.mligo"
 #include "./common/create_contract.mligo"
@@ -71,7 +72,7 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
         else unit in
 
     let tick_spacing = match Map.find_opt fee_bps store.fee_tiers with
-    | None -> failwith "invalid_fee_tier" 
+    | None -> failwith invalid_fee_tier 
     | Some ts -> ts in
 
     let c: constants = {
@@ -96,15 +97,15 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
 
 
 let update_dev_share (share: nat) (store: factory_storage) : return =
-    if Tezos.get_sender () <> store.admin then failwith not_authorised 
-    else
-        ([], { store with dev_share_bps = share })
+    let _ = if Tezos.get_sender () <> store.admin then failwith not_authorised else unit in
+    let _ = if share > max_dev_share then failwith invalid_dev_share else unit in
+    ([], { store with dev_share_bps = share })
 
 
 let update_protocol_share (share: nat) (store: factory_storage) : return =
-    if Tezos.get_sender () <> store.admin then failwith not_authorised 
-    else
-        ([], { store with protocol_share_bps = share })
+    let _ = if Tezos.get_sender () <> store.admin then failwith not_authorised else unit in
+    let _ = if share > max_protocol_share then failwith invalid_protocol_share else unit in
+    ([], { store with protocol_share_bps = share })
 
 
 let update_voter_address (voter: address) (store: factory_storage) : return =

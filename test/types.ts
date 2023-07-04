@@ -128,3 +128,14 @@ export interface YToXParams {
   min_dx: BigNumber;
   to_dx: string;
 }
+
+export interface FactoryStorage {
+  admin: string;
+  proposed_admin: string | null;
+  pools: MichelsonMap<{ 0: Token; 1: Token; 2: number }, string>;
+  fee_tiers: MichelsonMap<number, number>;
+  dev: string;
+  protocol_share_bps: number;
+  dev_share_bps: number;
+  voter: string;
+}

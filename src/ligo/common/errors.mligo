@@ -166,6 +166,15 @@
 (* Pool has already been created *)
 [@inline] let pool_already_exists = 406n
 
+(* Invalid fee tier *)
+[@inline] let invalid_fee_tier = 407n
+
+(* Invalid dev share *)
+[@inline] let invalid_dev_share = 408n
+
+(* Invalid protocol share*)
+[@inline] let invalid_protocol_share = 409n
+
 // ---------------------------------------------------------------------------
 // -- Farm codes
 // ---------------------------------------------------------------------------

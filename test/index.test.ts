@@ -18,6 +18,17 @@ import Observe from "./scenarios/core/observe";
 import GetPositionInfo from "./scenarios/core/get_position_info";
 import SnapshotCumuInside from "./scenarios/core/snapshot_cumulatives_inside";
 
+// Factory
+import DeployPool from "./scenarios/factory/deploy_pool";
+import UpdateProtocolShare from "./scenarios/factory/update_protocol_share";
+import UpdateDevShare from "./scenarios/factory/update_dev_share";
+import UpdateVoterAddress from "./scenarios/factory/update_voter_address";
+import UpdateDevAddress from "./scenarios/factory/update_dev_address";
+import UpdateFeeTiers from "./scenarios/factory/update_fee_tiers";
+import ToggleVeFactory from "./scenarios/factory/toggle_ve";
+import ProposeNewAdmin from "./scenarios/factory/propose_new_admin";
+import AcceptNewAdmin from "./scenarios/factory/accept_new_admin";
+
 // Library configuration for running test
 import BigNumber from "bignumber.js";
 BigNumber.config({ ROUNDING_MODE: BigNumber.ROUND_DOWN });
@@ -25,19 +36,31 @@ jest.setTimeout(30000);
 
 // This apparently makes the tests run much faster compared to a jest serialisation hook
 describe("unit", () => {
+  // Core
   setPosition();
-  // updatePosition();
-  // xToY();
-  // yToX();
-  // UpdateTimedCumulatives();
-  // IncreaseObservationCount();
-  // ForwardFee();
-  // ToggleVe();
-  // RetrieveDevShare();
-  // Transfer();
-  // UpdateOperators();
-  // BalanceOf();
-  // Observe();
-  // GetPositionInfo();
-  // SnapshotCumuInside();
+  updatePosition();
+  xToY();
+  yToX();
+  UpdateTimedCumulatives();
+  IncreaseObservationCount();
+  ForwardFee();
+  ToggleVe();
+  RetrieveDevShare();
+  Transfer();
+  UpdateOperators();
+  BalanceOf();
+  Observe();
+  GetPositionInfo();
+  SnapshotCumuInside();
+
+  // Factory
+  DeployPool();
+  UpdateDevShare();
+  UpdateProtocolShare();
+  UpdateDevAddress();
+  UpdateVoterAddress();
+  UpdateFeeTiers();
+  ToggleVeFactory();
+  ProposeNewAdmin();
+  AcceptNewAdmin();
 });

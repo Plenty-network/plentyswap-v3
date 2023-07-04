@@ -3,7 +3,8 @@ import { MAX_TICK, Tick } from "@plenty-labs/v3-sdk";
 import { MichelsonMap, UnitValue } from "@taquito/taquito";
 
 import { number } from "./math";
-import { CoreStorage, TickState, TimedCumulatives } from "../types";
+import { CoreStorage, TickState, TimedCumulatives, FactoryStorage } from "../types";
+import { accounts } from "./accounts";
 
 export const DECIMALS = 10 ** 6;
 
@@ -244,5 +245,25 @@ export const getDefaultCoreStorage = (): CoreStorage => {
     },
     ladder,
     is_ve: false,
+  };
+};
+
+// Function to return default factory storage
+export const getDefaultFactoryStorage = (): FactoryStorage => {
+  const feeTiers = new MichelsonMap<number, number>();
+  feeTiers.set(1, 1);
+  feeTiers.set(5, 10);
+  feeTiers.set(30, 60);
+  feeTiers.set(100, 200);
+
+  return {
+    admin: accounts.alice.pkh,
+    proposed_admin: null,
+    pools: new MichelsonMap(),
+    fee_tiers: feeTiers,
+    dev: accounts.alice.pkh,
+    protocol_share_bps: 2000,
+    dev_share_bps: 1500,
+    voter: accounts.alice.pkh,
   };
 };

@@ -29,4 +29,8 @@
 [@inline] let one_minus_fee_bps (c : constants) : nat =
   abs(10000n - c.fee_bps)
 
+[@inline] let max_dev_share = 4000n
+
+[@inline] let max_protocol_share = 5000n
+
 #endif
