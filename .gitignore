@@ -1,3 +1,4 @@
 .ligo-work/
 .DS_Store
 node_modules/
+.ligo/

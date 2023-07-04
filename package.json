@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "deploy": "ts-node ./deploy",
-    "test": "jest",
+    "test": "jest --runInBand --verbose",
     "flextesa": "docker run --rm --name flextesa --detach -p 20000:20000 -e block_time=1 oxheadalpha/flextesa:latest mumbaibox start"
   },
   "repository": {
