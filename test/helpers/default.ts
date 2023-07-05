@@ -3,7 +3,7 @@ import { MAX_TICK, Tick } from "@plenty-labs/v3-sdk";
 import { MichelsonMap, UnitValue } from "@taquito/taquito";
 
 import { number } from "./math";
-import { CoreStorage, TickState, TimedCumulatives, FactoryStorage } from "../types";
+import { CoreStorage, TickState, TimedCumulatives, FactoryStorage, FarmStorage } from "../types";
 import { accounts } from "./accounts";
 
 export const DECIMALS = 10 ** 6;
@@ -265,5 +265,19 @@ export const getDefaultFactoryStorage = (): FactoryStorage => {
     protocol_share_bps: 2000,
     dev_share_bps: 1500,
     voter: accounts.alice.pkh,
+  };
+};
+
+// Function to return default farm storage
+export const getDefaultFarmStorage = (): FarmStorage => {
+  return {
+    admin: accounts.alice.pkh,
+    proposed_admin: null,
+    cfmm_address: accounts.bob.pkh,
+    last_incentive_id: 0,
+    incentives: new MichelsonMap(),
+    deposits: new MichelsonMap(),
+    stakes: new MichelsonMap(),
+    rewards: new MichelsonMap(),
   };
 };

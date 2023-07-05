@@ -27,7 +27,7 @@ describe("factory.toggle_ve", () => {
     const tokenX: Fa12 = { fa12: accounts.bob.pkh };
     const tokenY: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
 
-    const pool = await tezos.deployContract("dummyPool", null);
+    const pool = await tezos.deployContract("dummyPool", { ve: false });
 
     // Add the pool in storage
     const pools = new MichelsonMap<{ 0: Token; 1: Token; 2: number }, string>();
@@ -48,7 +48,7 @@ describe("factory.toggle_ve", () => {
     const poolStorage = await tezos.getStorage(pool.address);
 
     // The pool contract is called correctly
-    expect(poolStorage).toEqual(true);
+    expect(poolStorage.ve).toEqual(true);
   });
 
   it("fails if not called by the admin", async () => {

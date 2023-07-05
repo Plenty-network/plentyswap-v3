@@ -139,3 +139,37 @@ export interface FactoryStorage {
   dev_share_bps: number;
   voter: string;
 }
+
+export interface Incentive {
+  reward_token: Token;
+  start_time: number;
+  end_time: number;
+  claim_deadline: number;
+  total_reward: BigNumber;
+  total_reward_unclaimed: BigNumber;
+  total_seconds_claimed: BigNumber;
+  n_stakes: number;
+  refundee: string;
+}
+
+export interface Deposit {
+  owner: string;
+  n_stakes: number;
+  tick_range: { 2: number; 3: number };
+}
+
+export interface Stake {
+  seconds_per_liquidity_inside_last: BigNumber;
+  liquidity: BigNumber;
+}
+
+export interface FarmStorage {
+  admin: string;
+  proposed_admin: string | null;
+  cfmm_address: string;
+  last_incentive_id: number;
+  incentives: MichelsonMap<number, Incentive>;
+  deposits: MichelsonMap<number, Deposit>;
+  stakes: MichelsonMap<{ 0: number; 1: number }, Stake>;
+  rewards: MichelsonMap<{ 0: Token; 1: string }, BigNumber>;
+}

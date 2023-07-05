@@ -1,9 +1,41 @@
-{ parameter (or (unit %default) (unit %toggle_ve)) ;
-  storage (option bool) ;
-  code { CAR ;
+{ parameter
+    (or (or (unit %default) (unit %toggle_ve))
+        (list %transfer
+           (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount)))))) ;
+  storage
+    (pair (pair (option %cumulatives_inside_snapshot
+                   (pair (pair (int %seconds_inside) (int %seconds_per_liquidity_inside))
+                         (int %tick_cumulative_inside)))
+                (option %position
+                   (pair (pair (nat %liquidity) (int %lower_tick_index))
+                         (address %owner)
+                         (int %upper_tick_index))))
+          (option %transfer_params
+             (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))))
+          (option %ve bool)) ;
+  code { UNPAIR ;
          IF_LEFT
-           { DROP ; PUSH string "Not allowed" ; FAILWITH }
-           { DROP ; PUSH bool True ; SOME } ;
+           { IF_LEFT
+               { DROP 2 ; PUSH string "Not allowed" ; FAILWITH }
+               { DROP ; DUP ; CDR ; PUSH bool True ; SOME ; UPDATE 2 ; UPDATE 2 } }
+           { DUP 2 ; DIG 2 ; CDR ; DIG 2 ; SOME ; UPDATE 1 ; UPDATE 2 } ;
          NIL operation ;
-         PAIR } }
+         PAIR } ;
+  view "get_position_info"
+       nat
+       (pair (pair (nat %liquidity) (int %lower_tick_index))
+             (address %owner)
+             (int %upper_tick_index))
+       { CDR ;
+         CAR ;
+         CDR ;
+         IF_NONE { PUSH string "option is None" ; FAILWITH } {} } ;
+  view "snapshot_cumulatives_inside"
+       (pair (int %lower_tick_index) (int %upper_tick_index))
+       (pair (pair (int %seconds_inside) (int %seconds_per_liquidity_inside))
+             (int %tick_cumulative_inside))
+       { CDR ;
+         CAR ;
+         CAR ;
+         IF_NONE { PUSH string "option is None" ; FAILWITH } {} } }
 
