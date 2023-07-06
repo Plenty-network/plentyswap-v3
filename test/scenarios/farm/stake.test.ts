@@ -1,41 +1,22 @@
-import { DefaultContractType, MichelsonMap, OpKind } from "@taquito/taquito";
+import { OpKind } from "@taquito/taquito";
 import { Math2, Stake, StakeManager, StakeOptions } from "@plenty-labs/v3-sdk";
 
 import Tezos from "../../tezos";
 import { number } from "../../helpers/math";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
+import { Incentive, FarmStorage, Position } from "../../types";
 import { DECIMALS, getDefaultFarmStorage } from "../../helpers/default";
-import { FA12Storage, Incentive, FarmStorage, Position } from "../../types";
 
 describe("farm.stake", () => {
   let tezos: Tezos;
   let storage: FarmStorage;
-  let token: DefaultContractType;
 
   const NOW = Math.floor(new Date().getTime() / 1000);
 
   beforeEach(async () => {
     tezos = new Tezos(config.rpcURL);
     await tezos.setSigner(accounts.alice.sk);
-
-    const fa12Storage: FA12Storage = {
-      administrator: accounts.alice.pkh,
-      balances: new MichelsonMap(),
-      metadata: new MichelsonMap(),
-      paused: false,
-      token_metadata: new MichelsonMap(),
-      totalSupply: number(100 * DECIMALS),
-    };
-
-    // Set initial balance for Alice
-    fa12Storage.balances.set(accounts.alice.pkh, {
-      balance: number(100 * DECIMALS),
-      approvals: new MichelsonMap(),
-    });
-
-    // Deploy the token
-    token = await tezos.deployContract("fa12", fa12Storage);
 
     const defaultFarmStorage = getDefaultFarmStorage();
 
@@ -62,7 +43,7 @@ describe("farm.stake", () => {
       seconds_inside: number(0),
     };
     const incentive: Incentive = {
-      reward_token: { fa12: token.address },
+      reward_token: { fa12: accounts.bob.pkh },
       start_time: NOW - 1000,
       end_time: NOW + 1000,
       claim_deadline: NOW + 2000,
@@ -143,7 +124,7 @@ describe("farm.stake", () => {
       seconds_inside: number(0),
     };
     const incentive: Incentive = {
-      reward_token: { fa12: token.address },
+      reward_token: { fa12: accounts.bob.pkh },
       start_time: NOW - 1000,
       end_time: NOW + 1000,
       claim_deadline: NOW + 2000,
@@ -190,7 +171,7 @@ describe("farm.stake", () => {
     const deposit = await updatedStorage.deposits.get(1);
     const updatedIncentive = await updatedStorage.incentives.get(1);
     const reward = await updatedStorage.rewards.get({
-      0: { fa12: token.address },
+      0: { fa12: accounts.bob.pkh },
       1: accounts.alice.pkh,
     });
 
@@ -261,7 +242,7 @@ describe("farm.stake", () => {
       seconds_inside: number(0),
     };
     const incentive: Incentive = {
-      reward_token: { fa12: token.address },
+      reward_token: { fa12: accounts.bob.pkh },
       start_time: NOW - 1000,
       end_time: NOW + 1000,
       claim_deadline: NOW + 2000,
@@ -325,7 +306,7 @@ describe("farm.stake", () => {
       seconds_inside: number(0),
     };
     const incentive: Incentive = {
-      reward_token: { fa12: token.address },
+      reward_token: { fa12: accounts.bob.pkh },
       start_time: NOW - 1000,
       end_time: NOW - 100,
       claim_deadline: NOW + 2000,

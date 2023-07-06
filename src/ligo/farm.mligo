@@ -282,7 +282,7 @@ let withdraw (token_id: nat) (store: storage): return =
 
 
 (* This only claims the reward that is already accounted in the rewards big_map. For claiming maximum possible
-   reward for a particular address, call `stake` for all the relative incentives *)
+   reward for a particular address, call `stake` for all the related incentives *)
 let claim_reward (tokens: token list) (store: storage): return =
     let rec aux (tokens: token list) (ops: operation list) (store: storage): return =
         match tokens with 
@@ -291,7 +291,7 @@ let claim_reward (tokens: token list) (store: storage): return =
             match Big_map.find_opt (h, Tezos.get_sender ()) store.rewards with
             | None -> aux t ops store
             | Some r -> begin
-                if r <> 0n then 
+                if r <> 0n then
                     let op = cfmm_token_transfer (Tezos.get_self_address ()) (Tezos.get_sender ()) r h in
                     (* Remove the reward *)
                     let updated_rewards = Big_map.update (h, Tezos.get_sender ()) None store.rewards in 
