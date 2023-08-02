@@ -132,7 +132,7 @@ describe("farm.end_incentive", () => {
           ...farm.methodsObject.end_incentive(2).toTransferParams(),
         },
       ])
-    ).rejects.toThrow("407");
+    ).rejects.toThrow("411");
   });
 
   it("fails when not called by the admin", async () => {
@@ -192,6 +192,6 @@ describe("farm.end_incentive", () => {
           ...farm.methodsObject.end_incentive(1).toTransferParams(),
         },
       ])
-    ).rejects.toThrow("416");
+    ).rejects.toThrow("420");
   });
 });

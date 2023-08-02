@@ -219,7 +219,7 @@ describe("farm.stake", () => {
     // When alice stakes for invalid incentive id, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.stake(farm, options) }])
-    ).rejects.toThrow("407");
+    ).rejects.toThrow("411");
   });
 
   it("fails if not called by owner of the position", async () => {
@@ -347,6 +347,29 @@ describe("farm.stake", () => {
     // When alice tries to stake on ended incentive
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.stake(farm, options) }])
-    ).rejects.toThrow("408");
+    ).rejects.toThrow("412");
+  });
+
+  // This test is a valid check for all EPs since tez rejection is placed before paramater
+  // pattern match starts
+  it("fails if tez is sent to the EP", async () => {
+    const farm = await tezos.deployContract("farm", storage);
+
+    const options: StakeOptions = { incentiveId: 1, tokenId: 1 };
+
+    // When alice send tez to the EP, txn fails
+    await expect(
+      tezos.sendBatchOp([
+        {
+          kind: OpKind.TRANSACTION,
+          ...farm.methodsObject
+            .stake({
+              0: options.tokenId,
+              1: options.incentiveId,
+            })
+            .toTransferParams({ amount: 1 }),
+        },
+      ])
+    ).rejects.toThrow("410");
   });
 });

@@ -175,38 +175,41 @@
 (* Invalid protocol share*)
 [@inline] let invalid_protocol_share = 409n
 
+(* Entry point does not accept tez *)
+[@inline] let tez_not_accepted = 410n
+
 // ---------------------------------------------------------------------------
 // -- Farm codes
 // ---------------------------------------------------------------------------
 
 (* Incentive id not present in the incentives big_map *)
-[@inline] let invalid_incentive_id = 407n
+[@inline] let invalid_incentive_id = 411n
 
 (* The incentive is over *)
-[@inline] let incentive_ended = 408n
+[@inline] let incentive_ended = 412n
 
 (* Cumulatives snapshot returned from the cfmm is invalid *)
-[@inline] let invalid_cumulatives_value = 409n
+[@inline] let invalid_cumulatives_value = 413n
 
 (* Unlikely internal error when unclaimed seconds becomes negative *)
-[@inline] let claimed_too_much_seconds = 410n
+[@inline] let claimed_too_much_seconds = 414n
 
 (* The position token is not yet deposited in the farm *)
-[@inline] let no_deposit_for_token = 411n
+[@inline] let no_deposit_for_token = 415n
 
 (* The position token is not staked for the incentive *)
-[@inline] let no_stake_for_token = 412n
+[@inline] let no_stake_for_token = 416n
 
 (* There are active stakes for the deposit so it can't be withdrawn yet *)
-[@inline] let active_stakes = 413n
+[@inline] let active_stakes = 417n
 
 (* The start time of an incentive is either greater than end or the start is in the past *)
-[@inline] let invalid_start_and_end = 414n
+[@inline] let invalid_start_and_end = 418n
 
 (* The claim deadline is within the incentive period *)
-[@inline] let invalid_claim_deadline = 415n
+[@inline] let invalid_claim_deadline = 419n
 
 (* The admin is ending the incentive before the claim deadline *)
-[@inline] let claim_deadline_not_reached = 416n
+[@inline] let claim_deadline_not_reached = 420n
 
 #endif

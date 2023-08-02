@@ -309,4 +309,32 @@ describe("factory.deploy_pool", () => {
       ])
     ).rejects.toThrow("406");
   });
+
+  // This test is a valid check for all EPs since tez rejection is placed before paramater
+  // pattern match starts
+  it("fails if tez is sent to the EP", async () => {
+    // Doesn't make sense to have bob as a token, but it works for the purpose of this test
+    const tokenX: Fa12 = { fa12: accounts.bob.pkh };
+    const tokenY: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
+
+    const factory = await tezos.deployContract("factory", storage);
+
+    // Fails when tez is sent to the EP
+    await expect(
+      tezos.sendBatchOp([
+        {
+          kind: OpKind.TRANSACTION,
+          ...factory.methodsObject
+            .deploy_pool({
+              token_x: tokenX,
+              token_y: tokenY,
+              initial_tick_index: 10,
+              fee_bps: 1,
+              extra_slots: 0,
+            })
+            .toTransferParams({ amount: 1 }), // Non zero amount
+        },
+      ])
+    ).rejects.toThrow("410");
+  });
 });

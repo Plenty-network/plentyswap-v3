@@ -528,6 +528,11 @@
          UPDATE ;
          DIG 3 ;
          UNPAIR ;
+         PUSH mutez 0 ;
+         AMOUNT ;
+         COMPARE ;
+         NEQ ;
+         IF { PUSH nat 410 ; FAILWITH } {} ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT

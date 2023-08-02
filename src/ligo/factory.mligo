@@ -168,6 +168,8 @@ let get_dev_address (_, store: unit * factory_storage) : address =
     store.dev
 
 let main (action, store: parameter * factory_storage) : return =
+    let _ = if Tezos.get_amount () <> 0mutez then failwith tez_not_accepted else unit in
+
     match action with
     | Deploy_pool params -> deploy_pool params store
     | Update_dev_share params -> update_dev_share params store

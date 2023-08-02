@@ -373,7 +373,9 @@ let accept_new_admin (_: unit) (store: storage): return =
     end
 
 
-let main (action, store: parameter * storage): return = 
+let main (action, store: parameter * storage): return =
+    let _ = if Tezos.get_amount () <> 0mutez then failwith tez_not_accepted else unit in
+
     match action with 
     | Stake p -> stake p store
     | Unstake p -> unstake p store

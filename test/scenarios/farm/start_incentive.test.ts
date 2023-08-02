@@ -143,9 +143,9 @@ describe("farm.start_incentive", () => {
             .toTransferParams(),
         },
       ])
-    ).rejects.toThrow("414");
+    ).rejects.toThrow("418");
 
-    // When alice starts a new incentive with starting is the past, the txn fails
+    // When alice starts a new incentive with starting in the past, the txn fails
     await expect(
       tezos.sendBatchOp([
         {
@@ -166,7 +166,7 @@ describe("farm.start_incentive", () => {
             .toTransferParams(),
         },
       ])
-    ).rejects.toThrow("414");
+    ).rejects.toThrow("418");
   });
 
   it("fails if the cliam deadline is in the past", async () => {
@@ -193,6 +193,6 @@ describe("farm.start_incentive", () => {
             .toTransferParams(),
         },
       ])
-    ).rejects.toThrow("415");
+    ).rejects.toThrow("419");
   });
 });
