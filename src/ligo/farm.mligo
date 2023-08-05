@@ -90,43 +90,43 @@ type get_reward_params = {
 
 (* Entrypoints and lambdas *)
 
-let get_reward (params: get_reward_params): incentive * nat =
-    let max_timestamp(a, b : timestamp * timestamp) : timestamp =
-        if a > b then a else b in
+let get_reward (params: get_reward_params): incentive * nat =    
+    if Tezos.get_now () > params.incentive.claim_deadline then
+        (params.incentive, 0n)
+    else
+        let max_timestamp(a, b : timestamp * timestamp) : timestamp =
+            if a > b then a else b in
 
-    (* Theoretically, we are calculating the number of seconds for which the liquidity of this position was active,
-       pro rated for all positions in that tick range. *)
-    let seconds_per_liquidity_inside_diff = {
-        x128 = assert_nat
-            ( params.seconds_per_liquidity_inside.x128 - params.stake.seconds_per_liquidity_inside_last.x128,
-            invalid_cumulatives_value)
-    } in
-    let seconds_inside = { x128 = seconds_per_liquidity_inside_diff.x128 * params.stake.liquidity } in
-    let total_seconds_for_reward = 
-        assert_nat(max_timestamp(params.incentive.end_time, Tezos.get_now()) - params.incentive.start_time, internal_impossible_err) in
-    let total_seconds_unclaimed = {
-        x128 = assert_nat 
-            ( Bitwise.shift_left total_seconds_for_reward 128n - params.incentive.total_seconds_claimed.x128,
-            claimed_too_much_seconds)
-    } in
+        (* Theoretically, we are calculating the number of seconds for which the liquidity of this position was active,
+        pro rated for all positions in that tick range. *)
+        let seconds_per_liquidity_inside_diff = {
+            x128 = assert_nat
+                ( params.seconds_per_liquidity_inside.x128 - params.stake.seconds_per_liquidity_inside_last.x128,
+                invalid_cumulatives_value)
+        } in
+        let seconds_inside = { x128 = seconds_per_liquidity_inside_diff.x128 * params.stake.liquidity } in
+        let total_seconds_for_reward = 
+            assert_nat(max_timestamp(params.incentive.end_time, Tezos.get_now()) - params.incentive.start_time, internal_impossible_err) in
+        let total_seconds_unclaimed = {
+            x128 = assert_nat 
+                ( Bitwise.shift_left total_seconds_for_reward 128n - params.incentive.total_seconds_claimed.x128,
+                claimed_too_much_seconds)
+        } in
+        
+        let reward = (params.incentive.total_reward_unclaimed * seconds_inside.x128) / total_seconds_unclaimed.x128 in
 
-    let reward = 
-        if Tezos.get_now () > params.incentive.claim_deadline then 0n 
-        else (params.incentive.total_reward_unclaimed * seconds_inside.x128) / total_seconds_unclaimed.x128 in
-
-    let (reward, remaining_reward) =
-        match is_nat(params.incentive.total_reward_unclaimed - reward) with
-        | Some remaining -> (reward, remaining)
-        | None -> (params.incentive.total_reward_unclaimed, 0n) in
-
-    (
-        { 
-            params.incentive with 
-            total_reward_unclaimed = remaining_reward; 
-            total_seconds_claimed = { x128 = params.incentive.total_seconds_claimed.x128 + seconds_inside.x128 };
-        },
-        reward
-    )
+        let (reward, remaining_reward) =
+            match is_nat(params.incentive.total_reward_unclaimed - reward) with
+            | Some remaining -> (reward, remaining)
+            | None -> (params.incentive.total_reward_unclaimed, 0n) in
+        (
+            { 
+                params.incentive with 
+                total_reward_unclaimed = remaining_reward; 
+                total_seconds_claimed = { x128 = params.incentive.total_seconds_claimed.x128 + seconds_inside.x128 };
+            },
+            reward
+        )
 
 
 let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
