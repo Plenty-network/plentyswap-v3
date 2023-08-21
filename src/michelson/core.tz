@@ -2706,7 +2706,7 @@
                                   MUL ;
                                   LSL ;
                                   PAIR ;
-                                  DUP 10 ;
+                                  DUP 11 ;
                                   SWAP ;
                                   EXEC ;
                                   DUP 3 ;
@@ -3642,7 +3642,7 @@
                       DIG 3 ;
                       LSL ;
                       PAIR ;
-                      DUP 11 ;
+                      DUP 10 ;
                       SWAP ;
                       EXEC ;
                       ADD ;
