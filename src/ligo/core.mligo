@@ -606,11 +606,20 @@ let toggle_ve (s: storage) : result =
 let snapshot_cumulatives_inside (p, s: snapshot_cumulatives_inside_param * storage) : cumulatives_inside_snapshot =
     let _: unit = if p.lower_tick_index > p.upper_tick_index then failwith tick_order_err else unit in
 
-    let sums = get_last_cumulatives s.cumulatives_buffer in
+    let last_value = get_last_cumulatives s.cumulatives_buffer in
+
+    let time_passed = abs (Tezos.get_now() - last_value.time) in
+
+    (* Recalculate spl to have the latest value *)
+    let spl = 
+        let spl_since_last_block_x128 = eval_seconds_per_liquidity_x128(s.liquidity, time_passed) in
+        last_value.spl.sum.x128 + spl_since_last_block_x128 
+    in
+
     let cums_total = { 
-        tick = sums.tick.sum;
+        tick = last_value.tick.sum + time_passed * s.cur_tick_index.i;
         seconds = Tezos.get_now() - epoch_time;
-        seconds_per_liquidity = {x128 = int sums.spl.sum.x128}
+        seconds_per_liquidity = {x128 = int spl}
     } in
 
     [@inline]

@@ -1,7 +1,7 @@
 import axios from "axios";
 import BigNumber from "bignumber.js";
 import { MichelsonMap } from "@taquito/taquito";
-import { MAX_TICK, Tick } from "@plenty-labs/v3-sdk";
+import { Math2, MAX_TICK, Tick } from "@plenty-labs/v3-sdk";
 
 import Tezos from "../../tezos";
 import { config } from "../../helpers/config";
@@ -64,6 +64,10 @@ describe("core.snapshot_cumulatives_inside", () => {
       spl: { sum: number(1000), block_start_liquidity_value: number(10) },
     });
 
+    // For simplicity of verification
+    storage.cur_tick_index = number(1);
+    storage.liquidity = number(1);
+
     const core = await tezos.deployContract("core", storage);
 
     // When the view is called
@@ -79,9 +83,22 @@ describe("core.snapshot_cumulatives_inside", () => {
       (await axios.get(`${config.rpcURL}/chains/main/blocks/head/header`)).data.timestamp
     );
 
+    // Extrapolate to latest cumulatives
+    const timePassed = timestamp - 100;
+    const updatedTickSums = timePassed + 1000;
+    const updatedLiquiditySums = Math2.bitShift(number(timePassed), -128).dividedBy(1).plus(1000);
+
     // Correct value is returned
-    expect(result.tick_cumulative_inside).toEqual(number(700));
-    expect(result.seconds_per_liquidity_inside).toEqual(number(700));
+    expect(
+      differsByNoMoreThan(result.tick_cumulative_inside, number(updatedTickSums - 100 - 200), 2)
+    ).toBeTruthy();
+    expect(
+      differsByNoMoreThan(
+        result.seconds_per_liquidity_inside,
+        updatedLiquiditySums.minus(300),
+        Math2.bitShift(number(1), -128).toNumber()
+      )
+    ).toBeTruthy();
     // hard to get exact timetamp of the call so we check for a maximum difference of 2 seconds.
     expect(differsByNoMoreThan(result.seconds_inside, number(timestamp - 300), 2)).toBeTruthy();
   });
