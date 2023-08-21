@@ -64,6 +64,17 @@ type return = operation list * factory_storage
 let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  =
     let { token_x; token_y; initial_tick_index; fee_bps; extra_slots; } = params in
     
+    (* Same token pairs must be in the same order for all fee tiers *)
+    (* If addresses are the same, the one with smaller token id is placed first *)
+    (* Otherwise, the one with lexicographically smaller address comes first *)
+    let (token_x, token_y) = 
+        let (addr_x, id_x) = match token_x with Fa12 addr -> (addr, 0n) | Fa2 v -> v in 
+        let (addr_y, id_y) = match token_y with Fa12 addr -> (addr, 0n) | Fa2 v -> v in
+        if addr_x = addr_y then 
+            if id_x < id_y then (token_x, token_y) else (token_y, token_x)
+        else if addr_x < addr_y then (token_x, token_y) else (token_y, token_x)
+    in
+
     (* The pair with the selected fee tier should not have been deployed already *) 
     let _ = 
         if (Big_map.mem (token_x, token_y, fee_bps) store.pools) || 

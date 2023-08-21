@@ -24,6 +24,99 @@ describe("factory.deploy_pool", () => {
     };
   });
 
+  it("correctly orders the tokens", async () => {
+    const factory = await tezos.deployContract("factory", storage);
+
+    const tokenX1: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(0) } };
+    const tokenY1: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
+
+    // When deployed pool is called
+    const op1 = await tezos.sendBatchOp([
+      {
+        kind: OpKind.TRANSACTION,
+        ...factory.methodsObject
+          .deploy_pool({
+            token_x: tokenX1,
+            token_y: tokenY1,
+            initial_tick_index: 10,
+            fee_bps: 1,
+            extra_slots: 0,
+          })
+          .toTransferParams(),
+      },
+    ]);
+
+    let deployedPool = await (
+      await axios.get(`${config.rpcURL}/chains/main/blocks/${op1.includedInBlock}`)
+    ).data.operations[3][0].contents[0].metadata.internal_operation_results[0].result
+      .originated_contracts[0];
+
+    let factoryStorage = await tezos.getStorage(factory.address);
+
+    // Tokens are ordered correctly
+    expect(await factoryStorage.pools.get({ 0: tokenX1, 1: tokenY1, 2: 1 })).toEqual(deployedPool);
+
+    // Should get flipped
+    const tokenX2: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(2) } };
+    const tokenY2: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
+
+    // When deployed pool is called
+    const op2 = await tezos.sendBatchOp([
+      {
+        kind: OpKind.TRANSACTION,
+        ...factory.methodsObject
+          .deploy_pool({
+            token_x: tokenX2,
+            token_y: tokenY2,
+            initial_tick_index: 10,
+            fee_bps: 1,
+            extra_slots: 0,
+          })
+          .toTransferParams(),
+      },
+    ]);
+
+    deployedPool = await (
+      await axios.get(`${config.rpcURL}/chains/main/blocks/${op2.includedInBlock}`)
+    ).data.operations[3][0].contents[0].metadata.internal_operation_results[0].result
+      .originated_contracts[0];
+
+    factoryStorage = await tezos.getStorage(factory.address);
+
+    // Tokens are ordered correctly (flipped)
+    expect(await factoryStorage.pools.get({ 0: tokenY2, 1: tokenX2, 2: 1 })).toEqual(deployedPool);
+
+    // Should get flipped again
+    const tokenX3: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(2) } };
+    const tokenY3: Fa12 = { fa12: accounts.alice.pkh };
+
+    // When deployed pool is called
+    const op3 = await tezos.sendBatchOp([
+      {
+        kind: OpKind.TRANSACTION,
+        ...factory.methodsObject
+          .deploy_pool({
+            token_x: tokenX3,
+            token_y: tokenY3,
+            initial_tick_index: 10,
+            fee_bps: 1,
+            extra_slots: 0,
+          })
+          .toTransferParams(),
+      },
+    ]);
+
+    deployedPool = await (
+      await axios.get(`${config.rpcURL}/chains/main/blocks/${op3.includedInBlock}`)
+    ).data.operations[3][0].contents[0].metadata.internal_operation_results[0].result
+      .originated_contracts[0];
+
+    factoryStorage = await tezos.getStorage(factory.address);
+
+    // Tokens are ordered correctly (flipped)
+    expect(await factoryStorage.pools.get({ 0: tokenY3, 1: tokenX3, 2: 1 })).toEqual(deployedPool);
+  });
+
   it("correctly deploys a pool without extra slots", async () => {
     const factory = await tezos.deployContract("factory", storage);
 

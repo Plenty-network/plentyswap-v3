@@ -572,6 +572,19 @@
                                   PAIR }
                                 { DROP 2 ; PUSH nat 401 ; FAILWITH } } }
                        { UNPAIR 5 ;
+                         DUP ;
+                         IF_LEFT { PUSH nat 0 ; SWAP ; PAIR } {} ;
+                         UNPAIR ;
+                         DUP 4 ;
+                         IF_LEFT { PUSH nat 0 ; SWAP ; PAIR } {} ;
+                         UNPAIR ;
+                         DUP ;
+                         DUP 4 ;
+                         COMPARE ;
+                         EQ ;
+                         IF { DIG 2 ; DROP 2 ; SWAP ; COMPARE ; LT ; IF { SWAP } {} }
+                            { SWAP ; DIG 3 ; DROP 2 ; SWAP ; COMPARE ; LT ; IF { SWAP } {} } ;
+                         SWAP ;
                          DUP 6 ;
                          CDR ;
                          CAR ;
