@@ -15,19 +15,13 @@ describe("core.transfer", () => {
     tezos = new Tezos(config.rpcURL);
     await tezos.setSigner(accounts.alice.sk);
 
-    const positions = new MichelsonMap<number, Position>();
+    const ledger = new MichelsonMap<number, string>();
 
-    positions.set(1, {
-      owner: accounts.alice.pkh,
-      lower_tick_index: number(-10),
-      upper_tick_index: number(20),
-      liquidity: number(1000),
-      fee_growth_inside_last: { x: number(0), y: number(0) },
-    });
+    ledger.set(1, accounts.alice.pkh);
 
     storage = {
       ...getDefaultCoreStorage(),
-      positions,
+      ledger,
     };
   });
 
@@ -57,10 +51,10 @@ describe("core.transfer", () => {
 
     const updatedStorage = await tezos.getStorage(core);
 
-    const position = await updatedStorage.positions.get(1);
+    const owner = await updatedStorage.ledger.get(1);
 
     // The owner is now bob
-    expect(position.owner).toEqual(accounts.bob.pkh);
+    expect(owner).toEqual(accounts.bob.pkh);
   });
 
   it("allows a zero amount transfer", async () => {
@@ -89,10 +83,10 @@ describe("core.transfer", () => {
 
     const updatedStorage = await tezos.getStorage(core);
 
-    const position = await updatedStorage.positions.get(1);
+    const owner = await updatedStorage.ledger.get(1);
 
     // The owner remains the same
-    expect(position.owner).toEqual(accounts.alice.pkh);
+    expect(owner).toEqual(accounts.alice.pkh);
   });
 
   it("allows an operator to make a transfer", async () => {
@@ -130,10 +124,10 @@ describe("core.transfer", () => {
 
     const updatedStorage = await tezos.getStorage(core);
 
-    const position = await updatedStorage.positions.get(1);
+    const owner = await updatedStorage.ledger.get(1);
 
     // The owner is changed to bob
-    expect(position.owner).toEqual(accounts.bob.pkh);
+    expect(owner).toEqual(accounts.bob.pkh);
   });
 
   it("fails if the sender is not an operator or owner", async () => {

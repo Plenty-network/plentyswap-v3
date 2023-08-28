@@ -187,9 +187,6 @@ type position_state = {
     (* Position edge tick indices *)
     lower_tick_index : tick_index;
     upper_tick_index : tick_index;
-    (* The position's owner.
-        By default - position's creator, but ownership can be transferred later. *)
-    owner : address;
     (* Position's liquidity. *)
     liquidity : nat;
     (* Total fees earned by the position at the moment of last fees collection for this position.
@@ -302,6 +299,8 @@ type fixed_point = { v : nat; offset : int }
 type ladder_key = { exp : nat; positive : bool }
 type ladder = (ladder_key, fixed_point) big_map
 
+(* For tzip-12 compatibility with wallets and tools *)
+type ledger = (nat, address) big_map
 
 type storage = {
     (* Virtual liquidity, the value L for which the curve locally looks like x * y = L^2. *)
@@ -345,6 +344,9 @@ type storage = {
 
     (* Cumulative values stored for the recent timestamps. *)
     cumulatives_buffer : timed_cumulatives_buffer;
+
+    (* Store the owners of the positions *)
+    ledger: ledger;
 
     (* TZIP-16 metadata. *)
     metadata : metadata_map;

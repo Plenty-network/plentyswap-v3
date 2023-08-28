@@ -16,8 +16,11 @@ describe("core.get_position_info", () => {
     await tezos.setSigner(accounts.alice.sk);
 
     const positions = new MichelsonMap<number, Position>();
+    const ledger = new MichelsonMap<number, string>();
+
+    ledger.set(1, accounts.alice.pkh);
+
     positions.set(1, {
-      owner: accounts.alice.pkh,
       lower_tick_index: number(-100),
       upper_tick_index: number(100),
       liquidity: number(1000),
@@ -29,6 +32,7 @@ describe("core.get_position_info", () => {
     storage = {
       ...defaultCoreStorage,
       positions,
+      ledger,
     };
   });
 

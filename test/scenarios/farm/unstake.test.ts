@@ -5,7 +5,7 @@ import Tezos from "../../tezos";
 import { number } from "../../helpers/math";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
-import { Incentive, FarmStorage, Position } from "../../types";
+import { Incentive, FarmStorage, Position, PositionInfo } from "../../types";
 import { DECIMALS, getDefaultFarmStorage } from "../../helpers/default";
 
 describe("farm.unstake", () => {
@@ -27,7 +27,7 @@ describe("farm.unstake", () => {
 
   it("correctly unstakes and records the reward before incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -138,7 +138,7 @@ describe("farm.unstake", () => {
 
   it("correctly unstakes and records the reward after incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),

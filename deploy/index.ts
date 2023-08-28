@@ -46,27 +46,27 @@ tezos.setProvider({
     // Metadata Store
     //================
 
-    console.log("> Deploying Metadata Store...");
+    // console.log("> Deploying Metadata Store...");
 
-    // Load metadata store code
-    const metadataStoreCode = fs
-      .readFileSync(`${__dirname}/../src/michelson/metadata_store.tz`)
-      .toString();
+    // // Load metadata store code
+    // const metadataStoreCode = fs
+    //   .readFileSync(`${__dirname}/../src/michelson/metadata_store.tz`)
+    //   .toString();
 
-    // Initial storage
-    const metadataStoreStorage = {
-      admins: ["tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S"],
-      tokens: MichelsonMap.fromLiteral({}),
-    };
+    // // Initial storage
+    // const metadataStoreStorage = {
+    //   admins: ["tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S"],
+    //   tokens: MichelsonMap.fromLiteral({}),
+    // };
 
-    // Deploy
-    const op2 = await tezos.contract.originate({
-      code: metadataStoreCode,
-      storage: metadataStoreStorage,
-    });
-    await op2.confirmation(1);
+    // // Deploy
+    // const op2 = await tezos.contract.originate({
+    //   code: metadataStoreCode,
+    //   storage: metadataStoreStorage,
+    // });
+    // await op2.confirmation(1);
 
-    console.log(`>> Deployed at: ${op2.contractAddress}`);
+    // console.log(`>> Deployed at: ${op2.contractAddress}`);
   } catch (err) {
     console.error(err);
   }

@@ -304,7 +304,6 @@ let set_position (s : storage) (p : set_position_param) : result =
     let position =
         {   liquidity = p.liquidity;
             fee_growth_inside_last = calc_fee_growth_inside s p.lower_tick_index p.upper_tick_index;
-            owner = (Tezos.get_sender ());
             lower_tick_index = p.lower_tick_index;
             upper_tick_index = p.upper_tick_index;
         } in
@@ -316,6 +315,7 @@ let set_position (s : storage) (p : set_position_param) : result =
 
     let s =
         { s with
+            ledger = Big_map.add s.new_position_id (Tezos.get_sender ()) s.ledger;
             positions = Big_map.add s.new_position_id position s.positions;
             new_position_id = s.new_position_id + 1n;
         } in
@@ -339,13 +339,14 @@ let update_position (s : storage) (p : update_position_param) : result =
     (* Grab the existing position *)
     let position = get_position (p.position_id, s.positions) in
     
+    let owner = get_owner p.position_id s.ledger in
 
     (* We only check for ownership in the event that liquidity is being removed. 
        This nuance is particularly useful in the farm. A position that is staked in a farm can have more liquidity
        added to it without withdrawal of the position token *)
     let _ = 
         if p.liquidity_delta < 0 then 
-            if position.owner <> Tezos.get_sender () then failwith not_authorised else unit
+            if owner <> Tezos.get_sender () then failwith not_authorised else unit
         else unit in
 
     (* Update liquidity of position. Abort if more than available liquidity is being removed when 
@@ -674,7 +675,7 @@ let get_position_info (position_id, s : position_id * storage) : position_info  
     let position = get_position(position_id, s.positions) in
         { 
             liquidity = position.liquidity;
-            owner = position.owner;
+            owner = get_owner position_id s.ledger;
             lower_tick_index = position.lower_tick_index;
             upper_tick_index = position.upper_tick_index
         }

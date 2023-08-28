@@ -5,7 +5,7 @@ import Tezos from "../../tezos";
 import { number } from "../../helpers/math";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
-import { Incentive, FarmStorage, Position } from "../../types";
+import { Incentive, FarmStorage, Position, PositionInfo } from "../../types";
 import { DECIMALS, getDefaultFarmStorage } from "../../helpers/default";
 
 describe("farm.stake", () => {
@@ -27,7 +27,7 @@ describe("farm.stake", () => {
 
   it("correctly mints a fresh position", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -106,7 +106,7 @@ describe("farm.stake", () => {
 
   it("correctly updates an existing stake and records the reward before incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -224,7 +224,7 @@ describe("farm.stake", () => {
 
   it("fails if not called by owner of the position", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -288,7 +288,7 @@ describe("farm.stake", () => {
 
   it("fails if incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),

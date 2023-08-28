@@ -141,6 +141,7 @@ describe("core.set_position", () => {
     const tokenYStorage = await tezos.getStorage(tokenY);
 
     const position = await updatedStorage.positions.get(0);
+    const owner = await updatedStorage.ledger.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
 
@@ -179,8 +180,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -296,6 +297,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -335,8 +337,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -449,6 +451,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -488,8 +491,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -602,6 +605,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -641,8 +645,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });

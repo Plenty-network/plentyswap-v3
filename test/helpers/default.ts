@@ -227,6 +227,7 @@ export const getDefaultCoreStorage = (): CoreStorage => {
     },
     ticks,
     positions: new MichelsonMap(),
+    ledger: new MichelsonMap(),
     cumulatives_buffer: {
       map: timedCumulatives,
       first: number(0),

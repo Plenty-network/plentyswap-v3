@@ -86,13 +86,13 @@ describe("core.update_position", () => {
       liquidity: initialLiquidity, // arbitrary
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     };
 
     const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
     const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
     const sqrtPriceCx80 = storage.sqrt_price;
 
+    storage.ledger.set(1, accounts.alice.pkh);
     storage.positions.set(1, position);
 
     const lowerTick: TickState = {
@@ -202,7 +202,6 @@ describe("core.update_position", () => {
       liquidity: liquidity.plus(1000),
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
@@ -231,13 +230,13 @@ describe("core.update_position", () => {
       liquidity: initialLiquidity, // arbitrary
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.bob.pkh,
     };
 
     const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
     const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
     const sqrtPriceCx80 = storage.sqrt_price;
 
+    storage.ledger.set(1, accounts.bob.pkh);
     storage.positions.set(1, position);
 
     const lowerTick: TickState = {
@@ -347,7 +346,6 @@ describe("core.update_position", () => {
       liquidity: liquidity.plus(1000),
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.bob.pkh,
     });
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
@@ -392,9 +390,9 @@ describe("core.update_position", () => {
       liquidity: initialLiquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     };
 
+    storage.ledger.set(1, accounts.alice.pkh);
     storage.positions.set(1, position);
 
     const lowerTick: TickState = {
@@ -512,7 +510,6 @@ describe("core.update_position", () => {
       liquidity: remainingLiquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
 
     const aliceBalanceX = await tokenXStorage.balances.get(accounts.alice.pkh);
@@ -561,9 +558,9 @@ describe("core.update_position", () => {
       liquidity: initialLiquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     };
 
+    storage.ledger.set(1, accounts.alice.pkh);
     storage.positions.set(1, position);
 
     const lowerTick: TickState = {
@@ -722,9 +719,8 @@ describe("core.update_position", () => {
       liquidity: number(1),
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.bob.pkh,
     };
-
+    storage.ledger.set(1, accounts.bob.pkh);
     storage.positions.set(1, position);
 
     const core = await tezos.deployContract("core", storage);
@@ -758,9 +754,9 @@ describe("core.update_position", () => {
       liquidity: number(1),
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     };
 
+    storage.ledger.set(1, accounts.alice.pkh);
     storage.positions.set(1, position);
 
     const core = await tezos.deployContract("core", storage);
@@ -794,9 +790,9 @@ describe("core.update_position", () => {
       liquidity: number(0),
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     };
 
+    storage.ledger.set(1, accounts.alice.pkh);
     storage.positions.set(1, position);
 
     const core = await tezos.deployContract("core", storage);
