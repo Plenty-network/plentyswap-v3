@@ -104,6 +104,7 @@ let garbage_collection (s : storage) (position : position_state) (position_id : 
                 then
                     { s with
                         positions = Big_map.remove position_id s.positions;
+                        ledger = Big_map.remove position_id s.ledger;
                     }
                 else s in
     let s = garbage_collect_tick s position.lower_tick_index in

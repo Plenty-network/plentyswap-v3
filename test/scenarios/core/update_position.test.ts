@@ -652,6 +652,7 @@ describe("core.update_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const updatedLedger = await updatedStorage.ledger.get(1);
     const updatedPosition = await updatedStorage.positions.get(1);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -663,6 +664,7 @@ describe("core.update_position", () => {
     expect(lowerTickState.n_positions).toEqual(number(1));
     expect(upperTickState.n_positions).toEqual(number(1));
     expect(updatedPosition).toEqual(undefined); // Position is removed
+    expect(updatedLedger).toEqual(undefined); // Position is removed
 
     const aliceBalanceX = await tokenXStorage.balances.get(accounts.alice.pkh);
     const aliceBalanceY = await tokenYStorage.ledger.get({ 0: accounts.alice.pkh, 1: 0 });
