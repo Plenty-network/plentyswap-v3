@@ -11,11 +11,11 @@
 let build_background (seed: nat): bytes = 
     Bytes.concats [
         pre_blur_1;
-        blur_color_1;
+        (match Map.find_opt seed blur_color_1 with Some c -> c | None -> failwith "impossible");
         pre_blur_2;
-        blur_color_1;
+        (match Map.find_opt seed blur_color_2 with Some c -> c | None -> failwith "impossible");
         pre_blur_3;
-        (match Map.find_opt seed blur_color_2 with Some c -> c | None -> blur_color_1);
+        (match Map.find_opt seed blur_color_3 with Some c -> c | None -> failwith "impossible");
         blur_close
     ]
 

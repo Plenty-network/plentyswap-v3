@@ -1,9 +1,11 @@
 #if !METADATA_VARIATIONS
 #define METADATA_VARIATIONS
 
-let blur_color_1 = 0x333936636462
+let blur_color_1 = Map.literal [(0n, 0x6666303066633735); (1n, 0x623330643064); (2n, 0x306437636233)]
 
-let blur_color_2 = Map.literal [(0n, 0x663937333136); (1n, 0x336666336438); (2n, 0x396435636666)]
+let blur_color_2 = Map.literal [(0n, 0x3966303066666135); (1n, 0x316130393435); (2n, 0x333237303663)]
+
+let blur_color_3 = Map.literal [(0n, 0x3835303066666433); (1n, 0x666630303738); (2n, 0x3738663761656365)]
 
 let in_range_color = 0x386262346462
 

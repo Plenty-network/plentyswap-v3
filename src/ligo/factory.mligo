@@ -95,7 +95,7 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
     } in
 
     (* TODO: replace the dummy link *)
-    let metadata_url = 0x697066733a2f2f516d5779384e6363477839347972335a794d464153726b794152336a4e7a6e3479707455787a6731624436636b43 in
+    let metadata_url = 0x697066733a2f2f516d537776726b71714a5276465a7775707a444763766875786369644c4151717a535766794838434c7033644338 in
 
     (* Construct pool storage *)
     let pool_storage = default_storage c initial_tick_index extra_slots (Big_map.literal [("", metadata_url)]) in

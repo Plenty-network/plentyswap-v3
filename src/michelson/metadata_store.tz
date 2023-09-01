@@ -109,11 +109,6 @@
          PAIR } ;
   view "get_token_metadata"
        (or (address %fa12) (pair %fa2 (address %address) (nat %token_id)))
-       (pair (bytes %symbol) (nat %decimals))
-       { UNPAIR ;
-         SWAP ;
-         CDR ;
-         SWAP ;
-         GET ;
-         IF_NONE { PUSH nat 100 ; FAILWITH } {} } }
+       (option (pair (bytes %symbol) (nat %decimals)))
+       { UNPAIR ; SWAP ; CDR ; SWAP ; GET } }
 

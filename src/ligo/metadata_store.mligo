@@ -47,10 +47,8 @@ let remove_tokens (tokens: token list) (store: storage): storage =
 (* Views *)
 
 [@view]
-let get_token_metadata (token, store: token * storage): token_value = 
-    match Big_map.find_opt token store.tokens with 
-    | Some t -> t
-    | None -> failwith 100n (* Todo: change this to simply return None once the blank NFT is received *)
+let get_token_metadata (token, store: token * storage): token_value option = 
+    Big_map.find_opt token store.tokens 
 
 
 let main (action, s: parameter * storage): return =
