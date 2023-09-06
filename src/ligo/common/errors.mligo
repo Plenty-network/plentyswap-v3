@@ -68,7 +68,14 @@
 (* The `x_token_address` or `y_token_address` has no `approve` entrypoint. *)
 [@inline] let asset_approve_invalid_entrypoints_err = 202n
 
+(* Swaps are paused for the pool *)
+[@inline] let swap_paused = 203n
 
+(* Liquidity addition is paused for the pool *)
+[@inline] let liquidity_addition_paused = 204n
+
+(* Liquidity removal is paused for the pool *)
+[@inline] let liquidity_removal_paused = 205n
 
 // ---------------------------------------------------------------------------
 // -- Internal error codes

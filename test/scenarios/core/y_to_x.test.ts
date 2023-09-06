@@ -1243,4 +1243,25 @@ describe("core.y_to_x", () => {
       ])
     ).rejects.toThrow("303");
   });
+
+  it("fails if swaps are paused", async () => {
+    storage.paused.swap = true;
+    storage.cur_tick_witness = number(-10);
+
+    const core = await tezos.deployContract("core", storage);
+
+    const params: YToXParams = {
+      dy: number(1), // Irrelevant
+      to_dx: accounts.alice.pkh,
+      min_dx: number(0),
+      deadline: NOW + 1000,
+    };
+
+    // When alice makes a swap when swaps are paused, the txn fails
+    await expect(
+      tezos.sendBatchOp([
+        { kind: OpKind.TRANSACTION, ...core.methodsObject.y_to_x(params).toTransferParams() },
+      ])
+    ).rejects.toThrow("203");
+  });
 });

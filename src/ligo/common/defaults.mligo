@@ -139,5 +139,6 @@ let default_storage
       operators = (Big_map.empty : operators);
       constants = constants;
       ladder = default_ladder;
+      paused = { swap = false; add_liquidity = false; remove_liquidity = false };
       is_ve = false
     }

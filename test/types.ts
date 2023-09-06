@@ -123,6 +123,7 @@ export interface CoreStorage {
     tick_spacing: BigNumber;
   };
   ladder: MichelsonMap<any, any>;
+  paused: { swap: boolean; add_liquidity: boolean; remove_liquidity: boolean };
   is_ve: boolean;
 }
 

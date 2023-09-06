@@ -392,6 +392,7 @@ let update_storage_x_to_y (s : storage) (dx : nat) : (nat * nat * storage) =
 
 (* Trade up to a quantity dx of asset x, receives dy *)
 let x_to_y (s : storage) (p : x_to_y_param) : result =
+    let _: unit = if s.paused.swap then failwith swap_paused else unit in
     let _: unit = check_deadline p.deadline in
     let (dx_spent, dy_received, s_new) = update_storage_x_to_y s p.dx in
     if dy_received < p.min_dy then
@@ -407,6 +408,7 @@ let x_to_y (s : storage) (p : x_to_y_param) : result =
 
 (* Trade up to a quantity dy of asset y, receives dx *)
 let y_to_x (s : storage) (p : y_to_x_param) : result =
+    let _: unit = if s.paused.swap then failwith swap_paused else unit in
     let _: unit = check_deadline p.deadline in
     let r = y_to_x_rec {s = s ; dy = p.dy ; dx = 0n; fee_shares = get_fee_shares s.constants.factory s.is_ve} in
     let dy_spent = assert_nat (p.dy - r.dy, internal_309) in

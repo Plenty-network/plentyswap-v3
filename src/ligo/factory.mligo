@@ -45,6 +45,8 @@ type deploy_pool_params = [@layout:comb] {
     extra_slots: nat;
 }
 
+type pause_pool_params = (pool_key, "pool_key", paused_value, "paused_value") michelson_pair
+
 type parameter =
     | Deploy_pool of deploy_pool_params
     | Update_dev_share of nat
@@ -53,6 +55,7 @@ type parameter =
     | Update_dev_address of address
     | Update_fee_tiers of fee_tiers
     | Toggle_ve of pool_key
+    | Pause_pool of pause_pool_params
     | Propose_new_admin of address
     | Accept_new_admin
 
@@ -129,6 +132,18 @@ let update_fee_tiers (params: fee_tiers) (store: factory_storage) : return =
         ([], { store with fee_tiers = params })
 
 
+let pause_pool (pool_key, paused_value: pause_pool_params) (store: factory_storage): return =
+    let _ = if Tezos.get_sender () <> store.admin then failwith not_authorised else unit in
+    match Big_map.find_opt pool_key store.pools with
+    | None -> failwith invalid_pool
+    | Some pool -> begin
+        let pool_contract: paused_value contract option = Tezos.get_entrypoint_opt "%pause" pool in
+        match pool_contract with
+        | None -> failwith invalid_contract
+        | Some c -> [Tezos.transaction paused_value 0mutez c], store
+    end
+
+
 (* Allows the admin to add/remove a pool from the ve system *)
 let toggle_ve (pool_key: pool_key) (store: factory_storage) : return =
     let _ = if Tezos.get_sender () <> store.admin then failwith not_authorised else unit in
@@ -180,6 +195,7 @@ let main (action, store: parameter * factory_storage) : return =
     | Update_voter_address params -> update_voter_address params store
     | Update_dev_address params -> update_dev_address params store 
     | Update_fee_tiers params -> update_fee_tiers params store
+    | Pause_pool params -> pause_pool params store
     | Toggle_ve params -> toggle_ve params store
     | Propose_new_admin params -> propose_new_admin params store
     | Accept_new_admin -> accept_new_admin store

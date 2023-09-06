@@ -957,4 +957,78 @@ describe("core.update_position", () => {
       ])
     ).rejects.toThrow("FA2_TOKEN_UNDEFINED");
   });
+
+  it("fails if liquidity addition is paused", async () => {
+    const lowerTickIndex = -10;
+    const upperTickIndex = 10;
+
+    const position: Position = {
+      fee_growth_inside_last: {
+        x: number(0),
+        y: number(0),
+      },
+      liquidity: number(0),
+      lower_tick_index: number(lowerTickIndex),
+      upper_tick_index: number(upperTickIndex),
+    };
+
+    storage.paused.add_liquidity = true;
+    storage.ledger.set(1, accounts.alice.pkh);
+    storage.positions.set(1, position);
+
+    const core = await tezos.deployContract("core", storage);
+
+    const options: UpdatePositionOptions = {
+      positionId: 1,
+      liquidityDelta: number(100),
+      toX: accounts.alice.pkh,
+      toY: accounts.alice.pkh,
+      deadline: NOW + 1000,
+      tokensLimit: { x: number(0), y: number(0) }, // Irrelevant
+    };
+
+    // When alice tries to update position when liquidity addition is paused, the txn fails
+    await expect(
+      tezos.sendBatchOp([
+        { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
+      ])
+    ).rejects.toThrow("204");
+  });
+
+  it("fails if liquidity removal is paused", async () => {
+    const lowerTickIndex = -10;
+    const upperTickIndex = 10;
+
+    const position: Position = {
+      fee_growth_inside_last: {
+        x: number(0),
+        y: number(0),
+      },
+      liquidity: number(0),
+      lower_tick_index: number(lowerTickIndex),
+      upper_tick_index: number(upperTickIndex),
+    };
+
+    storage.paused.remove_liquidity = true;
+    storage.ledger.set(1, accounts.alice.pkh);
+    storage.positions.set(1, position);
+
+    const core = await tezos.deployContract("core", storage);
+
+    const options: UpdatePositionOptions = {
+      positionId: 1,
+      liquidityDelta: number(-100),
+      toX: accounts.alice.pkh,
+      toY: accounts.alice.pkh,
+      deadline: NOW + 1000,
+      tokensLimit: { x: number(0), y: number(0) }, // Irrelevant
+    };
+
+    // When alice tries to update position when liquidity removal is paused, the txn fails
+    await expect(
+      tezos.sendBatchOp([
+        { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
+      ])
+    ).rejects.toThrow("205");
+  });
 });

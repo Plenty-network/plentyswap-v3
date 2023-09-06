@@ -1,24 +1,47 @@
 { parameter
-    (or (or (unit %default) (unit %toggle_ve))
-        (list %transfer
-           (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount)))))) ;
+    (or (or (unit %default)
+            (pair %pause (bool %swap) (bool %add_liquidity) (bool %remove_liquidity)))
+        (or (unit %toggle_ve)
+            (list %transfer
+               (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))))) ;
   storage
-    (pair (pair (option %cumulatives_inside_snapshot
-                   (pair (pair (int %seconds_inside) (int %seconds_per_liquidity_inside))
-                         (int %tick_cumulative_inside)))
+    (pair (pair (pair (option %cumulatives_inside_snapshot
+                         (pair (pair (int %seconds_inside) (int %seconds_per_liquidity_inside))
+                               (int %tick_cumulative_inside)))
+                      (option %paused (pair (bool %swap) (bool %add_liquidity) (bool %remove_liquidity))))
                 (option %position
                    (pair (pair (nat %liquidity) (int %lower_tick_index))
                          (address %owner)
-                         (int %upper_tick_index))))
-          (option %transfer_params
-             (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))))
+                         (int %upper_tick_index)))
+                (option %transfer_params
+                   (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount)))))))
           (option %ve bool)) ;
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
                { DROP 2 ; PUSH string "Not allowed" ; FAILWITH }
-               { DROP ; DUP ; CDR ; PUSH bool True ; SOME ; UPDATE 2 ; UPDATE 2 } }
-           { DUP 2 ; DIG 2 ; CDR ; DIG 2 ; SOME ; UPDATE 1 ; UPDATE 2 } ;
+               { DUP 2 ;
+                 DIG 2 ;
+                 CAR ;
+                 DUP ;
+                 CAR ;
+                 DIG 3 ;
+                 SOME ;
+                 UPDATE 2 ;
+                 UPDATE 1 ;
+                 UPDATE 1 } }
+           { IF_LEFT
+               { DROP ; PUSH bool True ; SOME ; UPDATE 2 }
+               { DUP 2 ;
+                 DIG 2 ;
+                 CAR ;
+                 DUP ;
+                 CDR ;
+                 DIG 3 ;
+                 SOME ;
+                 UPDATE 2 ;
+                 UPDATE 2 ;
+                 UPDATE 1 } } ;
          NIL operation ;
          PAIR } ;
   view "get_position_info"
@@ -29,12 +52,14 @@
        { CDR ;
          CAR ;
          CDR ;
+         CAR ;
          IF_NONE { PUSH string "option is None" ; FAILWITH } {} } ;
   view "snapshot_cumulatives_inside"
        (pair (int %lower_tick_index) (int %upper_tick_index))
        (pair (pair (int %seconds_inside) (int %seconds_per_liquidity_inside))
              (int %tick_cumulative_inside))
        { CDR ;
+         CAR ;
          CAR ;
          CAR ;
          IF_NONE { PUSH string "option is None" ; FAILWITH } {} } }

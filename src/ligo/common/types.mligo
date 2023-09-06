@@ -302,6 +302,13 @@ type ladder = (ladder_key, fixed_point) big_map
 (* For tzip-12 compatibility with wallets and tools *)
 type ledger = (nat, address) big_map
 
+(* Features that are paused *)
+type paused_value = [@layout:comb] {
+    swap: bool;
+    add_liquidity: bool;
+    remove_liquidity: bool;
+}
+
 type storage = {
     (* Virtual liquidity, the value L for which the curve locally looks like x * y = L^2. *)
     liquidity : nat;
@@ -362,6 +369,9 @@ type storage = {
 
     (* Exponents ladder for the calculation of 'half_bps_pow' *)
     ladder : ladder;
+
+    (* Features that are paused *)
+    paused : paused_value;
 
     (* `true` when the pool is a part of the ve-system *)
     is_ve : bool;
@@ -477,6 +487,7 @@ type parameter =
     | Increase_observation_count of increase_observation_count_param
     | ForwardFee of forwardFee_params
     | Retrieve_dev_share
+    | Pause of paused_value
     | Toggle_ve
 
 #endif

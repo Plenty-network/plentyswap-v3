@@ -242,6 +242,9 @@ let update_cur_tick_witness (s : storage) (tick_index : tick_index) : storage =
 
 
 let set_position (s : storage) (p : set_position_param) : result =
+    (* Liquidity addition must not be paused *)
+    let _: unit = if s.paused.add_liquidity then failwith liquidity_addition_paused else unit in
+
     let _: unit = check_deadline p.deadline in
     let allowed_tick_spacing = s.constants.tick_spacing in
     let _: unit = check_multiple_of_tick_spacing (p.lower_tick_index, allowed_tick_spacing) in
@@ -345,6 +348,13 @@ let set_position (s : storage) (p : set_position_param) : result =
 
 
 let update_position (s : storage) (p : update_position_param) : result =
+    (* Additions/Removals must not pe paused *)
+    let _: unit = 
+        if (p.liquidity_delta > 0) && (s.paused.add_liquidity) then failwith liquidity_addition_paused
+        else if (p.liquidity_delta <= 0) && (s.paused.remove_liquidity) then failwith liquidity_removal_paused
+        else unit 
+    in 
+
     let _: unit = check_deadline p.deadline in
 
     (* Grab the existing position *)
@@ -615,6 +625,12 @@ let retrieve_dev_share (s: storage) : result =
     ops, { s with dev_share = { x = 0n; y = 0n } }
 
 
+(* Allows specific features/functionalities of the pool to be paused *)
+let pause (s: storage) (paused_value: paused_value): result = 
+    let _: unit = if Tezos.get_sender () <> s.constants.factory then failwith not_authorised else unit in
+    [], { s with paused = paused_value }
+
+
 (* Allows for toggling the pool to be a part of ve-system *)
 let toggle_ve (s: storage) : result =
     let _: unit = if Tezos.get_sender () <> s.constants.factory then failwith not_authorised else unit in
@@ -722,4 +738,5 @@ let main ((p, s) : parameter * storage) : result =
         | Increase_observation_count n -> increase_observation_count(s, n)
         | ForwardFee p -> forward_fee s p
         | Retrieve_dev_share -> retrieve_dev_share s
+        | Pause p -> pause s p
         | Toggle_ve -> toggle_ve s
