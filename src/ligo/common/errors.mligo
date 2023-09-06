@@ -28,8 +28,9 @@
 (* User provided tick is not initialized. *)
 [@inline] let tick_not_exist_err = 105n
 
-(* The amount of tokens that needs to be transferred to the contract is higher than `maximum_tokens_contributed`. *)
-[@inline] let high_tokens_err = 106n
+(* The amount of tokens being added is more than the maximum intended by the user, or the amount being removed is
+   lower than the minimum intended by the user *)
+[@inline] let tokens_limit_err = 106n
 
 (* The X prime contract address provided is not a segmented-cfmm contract. *)
 [@inline] let invalid_x_prime_contract_err = 107n
@@ -144,6 +145,9 @@
 
 (* Price became negative when crossing a tick *)
 [@inline] let internal_negative_price = 326n
+
+(* Incorrect token ordering in the factory deploy pool *)
+[@inline] let invalid_token_ordering = 327n
 
 (* Invalid fee tier has been selected for the pool deployment *)
 [@inline] let invalid_fee_tier = 400n

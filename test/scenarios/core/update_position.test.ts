@@ -163,7 +163,7 @@ describe("core.update_position", () => {
       toX: accounts.mike.pkh, // irrelevant for addition
       toY: accounts.john.pkh, // irrelevant
       deadline: NOW + 1000,
-      maximumTokensContributed: finalAmounts,
+      tokensLimit: finalAmounts,
     };
 
     // When alice updates a position
@@ -307,7 +307,7 @@ describe("core.update_position", () => {
       toX: accounts.mike.pkh, // irrelevant for addition
       toY: accounts.john.pkh, // irrelevant
       deadline: NOW + 1000,
-      maximumTokensContributed: finalAmounts,
+      tokensLimit: finalAmounts,
     };
 
     // When alice (not position owner) updates a position
@@ -457,7 +457,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW + 1000,
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // Transfer tokens to core so it can return it back when removing liquidity
@@ -615,7 +615,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW + 1000,
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // Transfer tokens to core so it can return it back when removing liquidity
@@ -698,7 +698,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW - 1000, // in the past
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // When alice updates a position after deadline is crossed, the txn fails
@@ -733,7 +733,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW + 1000,
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // When alice (not owner) tries to remove liquidity, the txn fails
@@ -742,6 +742,148 @@ describe("core.update_position", () => {
         { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
       ])
     ).rejects.toThrow("401");
+  });
+
+  it("fails if less than minimum expected tokens are received when removing liquidity", async () => {
+    const lowerTickIndex = -10;
+    const upperTickIndex = 10;
+
+    const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
+    const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
+    const sqrtPriceCx80 = storage.sqrt_price;
+
+    // Arbitrary amount of tokens for initial liquidity
+    const amount = {
+      x: number(50 * DECIMALS),
+      y: number(50 * DECIMALS),
+    };
+
+    // SDK resolves the correct liquidity and associated amounts
+    const initialLiquidity = Liquidity.computeLiquidityFromAmount(
+      amount,
+      sqrtPriceCx80,
+      sqrtPriceAx80,
+      sqrtPriceBx80
+    );
+
+    const position: Position = {
+      fee_growth_inside_last: {
+        x: number(0),
+        y: number(0),
+      },
+      liquidity: initialLiquidity,
+      lower_tick_index: number(lowerTickIndex),
+      upper_tick_index: number(upperTickIndex),
+    };
+
+    storage.ledger.set(1, accounts.alice.pkh);
+    storage.positions.set(1, position);
+
+    const lowerTick: TickState = {
+      prev: number(-MAX_TICK),
+      next: number(10),
+      liquidity_net: initialLiquidity,
+      n_positions: number(1),
+      seconds_outside: number(0),
+      tick_cumulative_outside: number(0),
+      fee_growth_outside: { x: number(0), y: number(0) },
+      seconds_per_liquidity_outside: number(0),
+      sqrt_price: number(sqrtPriceAx80),
+    };
+
+    const upperTick: TickState = {
+      prev: number(-10),
+      next: number(MAX_TICK),
+      liquidity_net: initialLiquidity.multipliedBy(-1),
+      n_positions: number(1),
+      seconds_outside: number(0),
+      tick_cumulative_outside: number(0),
+      fee_growth_outside: { x: number(0), y: number(0) },
+      seconds_per_liquidity_outside: number(0),
+      sqrt_price: number(sqrtPriceBx80),
+    };
+
+    storage.ticks.set(lowerTickIndex, lowerTick);
+    storage.ticks.set(upperTickIndex, upperTick);
+
+    // Simulating fees
+    // Let's say 2 * DECIMALS of each x and y was collected in the range
+    // f/L = 2_000_000 / L
+    const feeGrowthX = Math2.floor(
+      Math2.bitShift(number(2_000_000).dividedBy(initialLiquidity), -128)
+    );
+    const feeGrowthY = Math2.floor(
+      Math2.bitShift(number(2_000_000).dividedBy(initialLiquidity), -128)
+    );
+
+    storage.fee_growth = {
+      x: feeGrowthX,
+      y: feeGrowthY,
+    };
+
+    storage.liquidity = initialLiquidity;
+
+    const core = await tezos.deployContract("core", storage);
+
+    const liquidityDelta = Math2.floor(initialLiquidity.multipliedBy(-0.1));
+    const remainingLiquidity = initialLiquidity.plus(liquidityDelta);
+
+    const removedAmount = Liquidity.computeAmountFromLiquidity(
+      liquidityDelta,
+      sqrtPriceCx80,
+      sqrtPriceAx80,
+      sqrtPriceBx80
+    );
+
+    // Transfer tokens to core so it can return it back when removing liquidity
+    await tezos.sendBatchOp([
+      {
+        kind: OpKind.TRANSACTION,
+        ...tokenX.methodsObject
+          .transfer({
+            from: accounts.alice.pkh,
+            to: core.address,
+            value: number(100 * DECIMALS),
+          })
+          .toTransferParams(),
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...tokenY.methodsObject
+          .transfer([
+            {
+              from_: accounts.alice.pkh,
+              txs: [{ to_: core.address, token_id: 0, amount: number(100 * DECIMALS) }],
+            },
+          ])
+          .toTransferParams(),
+      },
+    ]);
+
+    // Recalculate to adjust for rounding
+    const collectedFeesX = Math2.bitShift(storage.fee_growth.x.multipliedBy(initialLiquidity), 128);
+    const collectedFeesY = Math2.bitShift(storage.fee_growth.y.multipliedBy(initialLiquidity), 128);
+
+    // Since fees is returned along, alice gets the removed liquidity + fees
+    removedAmount.x = removedAmount.x.abs().plus(collectedFeesX);
+    removedAmount.y = removedAmount.y.abs().plus(collectedFeesY);
+
+    const options: UpdatePositionOptions = {
+      positionId: 1,
+      liquidityDelta: liquidityDelta, // Remove 10% of liquidity
+      toX: accounts.alice.pkh,
+      toY: accounts.alice.pkh,
+      deadline: NOW + 1000,
+      // Expect 5 more than liquidity being removed
+      tokensLimit: { x: removedAmount.x.plus(5), y: removedAmount.y.plus(5) },
+    };
+
+    // When alice updates a position
+    await expect(
+      tezos.sendBatchOp([
+        { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
+      ])
+    ).rejects.toThrow("106");
   });
 
   it("fails if more than the available liquidity is being removed", async () => {
@@ -769,7 +911,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW + 1000,
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // When alice tries to remove liquidity than available, the txn fails
@@ -805,7 +947,7 @@ describe("core.update_position", () => {
       toX: accounts.alice.pkh,
       toY: accounts.alice.pkh,
       deadline: NOW + 1000,
-      maximumTokensContributed: { x: number(0), y: number(0) },
+      tokensLimit: { x: number(0), y: number(0) },
     };
 
     // When alice tries to update position 2 (not existing), the txn fails

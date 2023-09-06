@@ -498,7 +498,7 @@ describe("core.set_position", () => {
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
 
     // Tokens are transferred correctly to the cfmm
-    expect(cfmmBalanceX.balance).toEqual(finalAmounts.x);
+    expect(cfmmBalanceX).toEqual(undefined);
     expect(cfmmBalanceY).toEqual(finalAmounts.y);
   });
 

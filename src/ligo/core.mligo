@@ -158,7 +158,7 @@ let collect_fees (s : storage) (key : position_id) (position : position_state) :
 let update_balances_after_position_change
         (s : storage)
         (lower_tick_index : tick_index) (upper_tick_index : tick_index)
-        (maximum_tokens_contributed : balance_nat)
+        (tokens_limit : balance_nat)
         (to_x : address) (to_y : address)
         (liquidity_delta : int) (fees : balance_nat) : result =
 
@@ -196,27 +196,37 @@ let update_balances_after_position_change
     (* Collect fees to increase withdrawal or reduce required deposit. *)
     let delta = {x = delta.x - fees.x; y = delta.y - fees.y} in
 
-    (* Check delta doesn't exceed maximum_tokens_contributed. *)
-    let _: unit = if delta.x > int(maximum_tokens_contributed.x) then
-        ([%Michelson ({| { FAILWITH } |} : nat * (nat * int) -> unit)]
-            (high_tokens_err, (maximum_tokens_contributed.x, delta.x)) : unit)
+    let delta_abs = { x = abs(delta.x); y = abs(delta.y) } in
+
+    (* Check delta doesn't exceed the limit for addition of liquidity and falls below the limit for removal. *)
+    let _: unit = 
+        if ((delta.x > 0) && (delta_abs.x > tokens_limit.x)) || ((delta.x < 0) && (delta_abs.x < tokens_limit.x))
+        then ([%Michelson ({| { FAILWITH } |} : nat * (nat * nat) -> unit)]
+            (tokens_limit_err, (tokens_limit.x, delta_abs.x)) : unit)
         else unit in
-    let _: unit = if delta.y > int(maximum_tokens_contributed.y) then
-        ([%Michelson ({| { FAILWITH } |} : nat * (nat * int) -> unit)]
-            (high_tokens_err, (maximum_tokens_contributed.y, delta.y)) : unit)
+    let _: unit = 
+        if ((delta.y > 0) && (delta_abs.y > tokens_limit.y)) || ((delta.y < 0) && (delta_abs.y < tokens_limit.y))
+        then ([%Michelson ({| { FAILWITH } |} : nat * (nat * nat) -> unit)]
+            (tokens_limit_err, (tokens_limit.y, delta_abs.y)) : unit)
         else unit in
 
-    let op_x = if delta.x > 0 then
-        cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.x) s.constants.token_x
-    else
-        cfmm_token_transfer (Tezos.get_self_address ()) to_x (abs delta.x) s.constants.token_x in
+    let ops = if delta.x > 0 then
+        [cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) delta_abs.x s.constants.token_x]
+    else if delta.x < 0 then
+        [cfmm_token_transfer (Tezos.get_self_address ()) to_x delta_abs.x s.constants.token_x]
+    else  
+        []
+    in
 
-    let op_y = if delta.y > 0 then
-        cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) (abs delta.y) s.constants.token_y
+    let ops = if delta.y > 0 then
+        (cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) delta_abs.y s.constants.token_y)::ops
+    else if delta.x < 0 then
+        (cfmm_token_transfer (Tezos.get_self_address ()) to_y delta_abs.y s.constants.token_y)::ops 
     else
-        cfmm_token_transfer (Tezos.get_self_address ()) to_y (abs delta.y) s.constants.token_y in
+        ops
+    in
 
-    ([op_x; op_y], s )
+    (ops, s)
 
 
 (*  
@@ -373,7 +383,7 @@ let update_position (s : storage) (p : update_position_param) : result =
 
     let (ops, s) = update_balances_after_position_change
         s position.lower_tick_index position.upper_tick_index
-        p.maximum_tokens_contributed
+        p.tokens_limit
         p.to_x p.to_y
         p.liquidity_delta fees in
 
@@ -435,23 +445,23 @@ let rec find_cumulatives_around (buffer, t, l, r : timed_cumulatives_buffer * ti
         (l_v, r_v, assert_nat (t - l_v.time, internal_observe_bin_search_failed))
 
 
-let get_cumulatives (buffer : timed_cumulatives_buffer) (t : timestamp) : cumulatives_value =
-    let l_i = buffer.first in
-    let r_i = buffer.last in
-    let l_v = get_registered_cumulatives_unsafe buffer l_i in
-    let r_v = get_registered_cumulatives_unsafe buffer r_i in
+let get_cumulatives (s : storage) (t : timestamp) : cumulatives_value =
+    let l_i = s.cumulatives_buffer.first in
+    let r_i = s.cumulatives_buffer.last in
+    let l_v = get_registered_cumulatives_unsafe s.cumulatives_buffer l_i in
+    let r_v = get_registered_cumulatives_unsafe s.cumulatives_buffer r_i in
 
     let _: unit = if t < l_v.time
         then ([%Michelson ({| { FAILWITH } |} : nat * (timestamp * timestamp) -> unit)]
             (observe_outdated_timestamp_err, (l_v.time, t)) : unit)
         else unit in
-    let _: unit = if t > r_v.time
+    let _: unit = if t > Tezos.get_now ()
         then ([%Michelson ({| { FAILWITH } |} : nat * (timestamp * timestamp) -> unit)]
             (observe_future_timestamp_err, (r_v.time, t)) : unit)
         else unit in
 
     if t < r_v.time then
-        let (sums_at_left, sums_at_right, time_delta) = find_cumulatives_around (buffer, t, (l_i, l_v), (r_i, r_v))
+        let (sums_at_left, sums_at_right, time_delta) = find_cumulatives_around (s.cumulatives_buffer, t, (l_i, l_v), (r_i, r_v))
 
         (* 
             When no updates to contract are performed, time-weighted accumulators grow
@@ -477,13 +487,15 @@ let get_cumulatives (buffer : timed_cumulatives_buffer) (t : timestamp) : cumula
                     eval_seconds_per_liquidity_x128(at_left_block_end_spl_value, time_delta) 
                 }
             }
-    else 
-        (*  t = r_v.time
-            This means that t = timestamp of the last recorded entry,
-            and we cannot use extrapolation as above *)
-        { 
-            tick_cumulative = r_v.tick.sum;
-            seconds_per_liquidity_cumulative = r_v.spl.sum
+    else
+        let time_delta = assert_nat (t - r_v.time, internal_impossible_err) in 
+        (*  t >= r_v.time
+            In this case we extrapolate the last value *)
+        {
+            tick_cumulative = r_v.tick.sum + time_delta * s.cur_tick_index.i;
+            seconds_per_liquidity_cumulative = {
+                x128 = r_v.spl.sum.x128 + eval_seconds_per_liquidity_x128(s.liquidity, time_delta)
+            }
         }
     
 
@@ -562,16 +574,22 @@ let forward_fee (s: storage) (p: forwardFee_params) : result =
     ] in 
 
     (* Send protocol share to fee distributor *)
-    let op_send_x = 
-        cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.x s.constants.token_x in
-    let op_send_y = 
-        cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.y s.constants.token_y in
+    let ops = 
+        if s.protocol_share.x > 0n then
+            [cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.x s.constants.token_x]
+        else []
+    in
+    let ops =
+        if s.protocol_share.y > 0n then
+            (cfmm_token_transfer (Tezos.get_self_address ()) p.feeDistributor s.protocol_share.y s.constants.token_y)::ops 
+        else ops
+    in
     
     (* Set the fee values in fee distributor *)
     let params = { epoch = p.epoch; fees = fees } in
     let op_add_fees = Tezos.transaction params 0mutez fee_distributor in
 
-    [op_send_x; op_send_y; op_add_fees], { s with protocol_share = { x = 0n; y = 0n } }
+    op_add_fees::ops, { s with protocol_share = { x = 0n; y = 0n } }
 
 
 (* Allows for transfer of the dev share of swap fees over to the dev address *)
@@ -583,12 +601,18 @@ let retrieve_dev_share (s: storage) : result =
     let _: unit = if Tezos.get_sender () <> dev then failwith not_authorised else unit in
 
     (* Send dev share to dev address *)
-    let op_send_x = 
-        cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.x s.constants.token_x in
-    let op_send_y = 
-        cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.y s.constants.token_y in
+    let ops =
+        if s.dev_share.x > 0n then
+            [cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.x s.constants.token_x] 
+        else []
+    in
+    let ops = 
+        if s.dev_share.y > 0n then
+            (cfmm_token_transfer (Tezos.get_self_address ()) dev s.dev_share.y s.constants.token_y)::ops 
+        else ops 
+    in
 
-    [op_send_x; op_send_y], { s with dev_share = { x = 0n; y = 0n } }
+    ops, { s with dev_share = { x = 0n; y = 0n } }
 
 
 (* Allows for toggling the pool to be a part of ve-system *)
@@ -668,7 +692,7 @@ let snapshot_cumulatives_inside (p, s: snapshot_cumulatives_inside_param * stora
 
 [@view]
 let observe (times, s: timestamp list * storage) : cumulatives_value list =
-    List.map (get_cumulatives s.cumulatives_buffer) times
+    List.map (get_cumulatives s) times
 
 
 [@view]
