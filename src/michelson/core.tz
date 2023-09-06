@@ -2557,15 +2557,11 @@
                          CAR ;
                          GET ;
                          IF_NONE { PUSH string "FA2_TOKEN_UNDEFINED" ; FAILWITH } {} ;
-                         PUSH int 0 ;
-                         DUP 4 ;
-                         CAR ;
-                         CAR ;
-                         CDR ;
+                         SENDER ;
+                         SWAP ;
                          COMPARE ;
-                         LT ;
-                         IF { SENDER ; SWAP ; COMPARE ; NEQ ; IF { PUSH nat 401 ; FAILWITH } {} }
-                            { DROP } ;
+                         NEQ ;
+                         IF { PUSH nat 401 ; FAILWITH } {} ;
                          PUSH nat 111 ;
                          DUP 3 ;
                          CAR ;

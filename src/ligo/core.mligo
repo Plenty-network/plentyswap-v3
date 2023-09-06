@@ -362,14 +362,9 @@ let update_position (s : storage) (p : update_position_param) : result =
     
     let owner = get_owner p.position_id s.ledger in
 
-    (* We only check for ownership in the event that liquidity is being removed. 
-       This nuance is particularly useful in the farm. A position that is staked in a farm can have more liquidity
-       added to it without withdrawal of the position token *)
-    let _ = 
-        if p.liquidity_delta < 0 then 
-            if owner <> Tezos.get_sender () then failwith not_authorised else unit
-        else unit in
-
+    (* Sender must be the owner of the position *)
+    let _ = if owner <> Tezos.get_sender () then failwith not_authorised else unit in
+      
     (* Update liquidity of position. Abort if more than available liquidity is being removed when 
        `p.liquidity_delta` is negative *)
     let liquidity_new = assert_nat (position.liquidity + p.liquidity_delta, position_liquidity_below_zero_err) in

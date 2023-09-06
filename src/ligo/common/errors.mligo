@@ -223,4 +223,7 @@
 (* The admin is ending the incentive before the claim deadline *)
 [@inline] let claim_deadline_not_reached = 420n
 
+(* Stake already exists for the given NFT *)
+[@inline] let stake_already_exists = 421n
+
 #endif

@@ -155,9 +155,9 @@ let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
         | Some cs -> cs in 
 
     (* If no stake exists for this token on the incentive then create fresh stake,
-       otherwise compute already accrued rewards and update the stake
-       The latter can be useful when liquidity is added to a position that is already staked. *)
+       otherwise revert *)
     match Big_map.find_opt (token_id, incentive_id) store.stakes with
+    | Some _ -> failwith stake_already_exists
     | None -> begin
         (* Create a deposit if not already present *)
         let op, deposit = match Big_map.find_opt token_id store.deposits with 
@@ -183,29 +183,6 @@ let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
             Big_map.update incentive_id (Some { incentive with n_stakes = incentive.n_stakes + 1n }) store.incentives in
 
         op, { store with stakes = updated_stakes; deposits = updated_deposits; incentives = updated_incentives; }
-    end
-    | Some stake -> begin
-        (* Get existing unclaimed reward and updated incentive for the stake *)
-        let (incentive, reward) = 
-            get_reward { 
-                incentive; 
-                stake; 
-                seconds_per_liquidity_inside = cumulatives_snapshot.seconds_per_liquidity_inside;
-            } in
-        
-        let existing_reward = 
-            match Big_map.find_opt (incentive.reward_token, owner) store.rewards with None -> 0n | Some r -> r in
-
-        let stake: stake = { 
-            seconds_per_liquidity_inside_last = cumulatives_snapshot.seconds_per_liquidity_inside;
-            liquidity;
-        } in
-
-        let updated_stakes = Big_map.update (token_id, incentive_id) (Some stake) store.stakes in
-        let updated_incentives = Big_map.update incentive_id (Some incentive) store.incentives in
-        let updated_rewards = 
-            Big_map.update (incentive.reward_token, owner) (Some (existing_reward + reward)) store.rewards in
-        [], { store with incentives = updated_incentives; rewards = updated_rewards; stakes = updated_stakes; }
     end
 
 

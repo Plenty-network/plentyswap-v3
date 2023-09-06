@@ -216,150 +216,6 @@ describe("core.update_position", () => {
     expect(cfmmBalanceY).toEqual(finalAmounts.y);
   });
 
-  it("correctly increases liquidity in a position not owned by the sender", async () => {
-    const lowerTickIndex = -10;
-    const upperTickIndex = 10;
-
-    const initialLiquidity = number(1000);
-
-    const position: Position = {
-      fee_growth_inside_last: {
-        x: number(0),
-        y: number(0),
-      },
-      liquidity: initialLiquidity, // arbitrary
-      lower_tick_index: number(lowerTickIndex),
-      upper_tick_index: number(upperTickIndex),
-    };
-
-    const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
-    const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
-    const sqrtPriceCx80 = storage.sqrt_price;
-
-    storage.ledger.set(1, accounts.bob.pkh);
-    storage.positions.set(1, position);
-
-    const lowerTick: TickState = {
-      prev: number(-MAX_TICK),
-      next: number(10),
-      liquidity_net: initialLiquidity,
-      n_positions: number(1),
-      seconds_outside: number(0),
-      tick_cumulative_outside: number(0),
-      fee_growth_outside: { x: number(0), y: number(0) },
-      seconds_per_liquidity_outside: number(0),
-      sqrt_price: number(sqrtPriceAx80),
-    };
-
-    const upperTick: TickState = {
-      prev: number(-10),
-      next: number(MAX_TICK),
-      liquidity_net: initialLiquidity.multipliedBy(-1),
-      n_positions: number(1),
-      seconds_outside: number(0),
-      tick_cumulative_outside: number(0),
-      fee_growth_outside: { x: number(0), y: number(0) },
-      seconds_per_liquidity_outside: number(0),
-      sqrt_price: number(sqrtPriceBx80),
-    };
-
-    storage.ticks.set(lowerTickIndex, lowerTick);
-    storage.ticks.set(upperTickIndex, upperTick);
-
-    // Simulating fees
-    // Let's say 2 * DECIMALS of each x and y was collected in the range
-    // f/L = 2_000_000 / 1000 = 2000, so
-    const feeGrowthX = Math2.bitShift(number(2000), -128);
-    const feeGrowthY = Math2.bitShift(number(2000), -128);
-
-    storage.fee_growth = {
-      x: feeGrowthX,
-      y: feeGrowthY,
-    };
-
-    storage.liquidity = number(1000);
-
-    const core = await tezos.deployContract("core", storage);
-
-    // Arbitrary amount to increase liquidity by
-    const amount = {
-      x: number(50 * DECIMALS),
-      y: number(50 * DECIMALS),
-    };
-
-    // SDK resolves the correct liquidity and associated amounts
-    const liquidity = Liquidity.computeLiquidityFromAmount(
-      amount,
-      sqrtPriceCx80,
-      sqrtPriceAx80,
-      sqrtPriceBx80
-    );
-    const finalAmounts = Liquidity.computeAmountFromLiquidity(
-      liquidity,
-      sqrtPriceCx80,
-      sqrtPriceAx80,
-      sqrtPriceBx80
-    );
-
-    const options: UpdatePositionOptions = {
-      positionId: 1,
-      liquidityDelta: liquidity,
-      toX: accounts.mike.pkh, // irrelevant for addition
-      toY: accounts.john.pkh, // irrelevant
-      deadline: NOW + 1000,
-      tokensLimit: finalAmounts,
-    };
-
-    // When alice (not position owner) updates a position
-    const op = await tezos.sendBatchOp([
-      {
-        kind: OpKind.TRANSACTION,
-        ...Approvals.approveFA12(tokenX, { spender: core.address, value: amount.x }),
-      },
-      {
-        kind: OpKind.TRANSACTION,
-        ...Approvals.updateOperatorsFA2(tokenY, [
-          { add_operator: { owner: accounts.alice.pkh, operator: core.address, token_id: 0 } },
-        ]),
-      },
-      { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
-    ]);
-
-    const updatedStorage = await tezos.getStorage(core);
-    const tokenXStorage = await tezos.getStorage(tokenX);
-    const tokenYStorage = await tezos.getStorage(tokenY);
-
-    const updatedPosition = await updatedStorage.positions.get(1);
-    const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
-    const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
-
-    // the storage is updated correctly
-    expect(updatedStorage.liquidity).toEqual(liquidity.plus(1000));
-
-    expect(lowerTickState.liquidity_net).toEqual(liquidity.plus(1000));
-    expect(upperTickState.liquidity_net).toEqual(liquidity.plus(1000).multipliedBy(-1));
-    expect(updatedPosition).toEqual({
-      fee_growth_inside_last: {
-        x: number(feeGrowthX),
-        y: number(feeGrowthY),
-      },
-      liquidity: liquidity.plus(1000),
-      lower_tick_index: number(lowerTickIndex),
-      upper_tick_index: number(upperTickIndex),
-    });
-
-    const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
-    const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
-
-    // Since fees is reinvested, the final amount transferred would be less by the amt of fees
-    finalAmounts.x = finalAmounts.x.minus(2 * DECIMALS);
-    finalAmounts.y = finalAmounts.y.minus(2 * DECIMALS);
-
-    // Tokens are transferred correctly to the cfmm
-    expect(cfmmBalanceX.balance).toEqual(finalAmounts.x);
-    expect(cfmmBalanceY).toEqual(finalAmounts.y);
-  });
-
   it("correctly removes liquidity from a position", async () => {
     const lowerTickIndex = -10;
     const upperTickIndex = 10;
@@ -707,6 +563,60 @@ describe("core.update_position", () => {
         { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
       ])
     ).rejects.toThrow("103");
+  });
+
+  it("fails if position is not being updated by owner", async () => {
+    const lowerTickIndex = -10;
+    const upperTickIndex = 10;
+
+    const initialLiquidity = number(1000);
+
+    const position: Position = {
+      fee_growth_inside_last: {
+        x: number(0),
+        y: number(0),
+      },
+      liquidity: initialLiquidity, // arbitrary
+      lower_tick_index: number(lowerTickIndex),
+      upper_tick_index: number(upperTickIndex),
+    };
+
+    storage.ledger.set(1, accounts.bob.pkh);
+    storage.positions.set(1, position);
+
+    const core = await tezos.deployContract("core", storage);
+
+    // Arbitrary amount to increase liquidity by
+    const amount = {
+      x: number(50 * DECIMALS),
+      y: number(50 * DECIMALS),
+    };
+
+    const options: UpdatePositionOptions = {
+      positionId: 1,
+      liquidityDelta: number(1),
+      toX: accounts.mike.pkh, // Irrelevant
+      toY: accounts.john.pkh, // irrelevant
+      deadline: NOW + 1000,
+      tokensLimit: amount,
+    };
+
+    // When alice (not position owner) updates a position, txn fails
+    await expect(
+      tezos.sendBatchOp([
+        {
+          kind: OpKind.TRANSACTION,
+          ...Approvals.approveFA12(tokenX, { spender: core.address, value: amount.x }),
+        },
+        {
+          kind: OpKind.TRANSACTION,
+          ...Approvals.updateOperatorsFA2(tokenY, [
+            { add_operator: { owner: accounts.alice.pkh, operator: core.address, token_id: 0 } },
+          ]),
+        },
+        { kind: OpKind.TRANSACTION, ...PositionManager.updatePositionOp(core, options) },
+      ])
+    ).rejects.toThrow("401");
   });
 
   it("fails if the liquidity is attempted to be removed by someone other than owner", async () => {
