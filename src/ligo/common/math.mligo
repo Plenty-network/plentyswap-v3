@@ -14,7 +14,10 @@
     { v = a.v * b.v ; offset = a.offset + b.offset }
 
 let ceildiv (numerator : nat) (denominator : nat) : nat = abs ((- numerator) / (int denominator))
+
+(* Note: This helper is never used in a scenario where the denominator is negative *)
 let ceildiv_int (numerator : int) (denominator : int) : int = - ((- numerator) /  denominator)
+
 let floordiv (numerator : nat) (denominator : nat) : nat =  numerator / denominator
 
 (*
