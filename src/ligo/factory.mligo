@@ -72,8 +72,7 @@ let deploy_pool (params: deploy_pool_params) (store: factory_storage) : return  
 
     (* The pair with the selected fee tier should not have been deployed already *) 
     let _ = 
-        if (Big_map.mem (token_x, token_y, fee_bps) store.pools) || 
-        (Big_map.mem (token_y, token_x, fee_bps) store.pools) then
+        if (Big_map.mem (token_x, token_y, fee_bps) store.pools) then 
             failwith pool_already_exists
         else unit in
 
