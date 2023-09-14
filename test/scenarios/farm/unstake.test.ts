@@ -5,7 +5,7 @@ import Tezos from "../../tezos";
 import { number } from "../../helpers/math";
 import { config } from "../../helpers/config";
 import { accounts } from "../../helpers/accounts";
-import { Incentive, FarmStorage, Position } from "../../types";
+import { Incentive, FarmStorage, Position, PositionInfo } from "../../types";
 import { DECIMALS, getDefaultFarmStorage } from "../../helpers/default";
 
 describe("farm.unstake", () => {
@@ -27,7 +27,7 @@ describe("farm.unstake", () => {
 
   it("correctly unstakes and records the reward before incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -138,7 +138,7 @@ describe("farm.unstake", () => {
 
   it("correctly unstakes and records the reward after incentive is over", async () => {
     // Arbitrary values for testing the farm logic
-    const position: Position = {
+    const position: PositionInfo = {
       fee_growth_inside_last: {
         x: number(0),
         y: number(0),
@@ -276,7 +276,7 @@ describe("farm.unstake", () => {
     // When alice unstakes a position for incentive id 2, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.unstake(farm, options) }])
-    ).rejects.toThrow("407");
+    ).rejects.toThrow("411");
   });
 
   it("fails for invalid deposit", async () => {
@@ -315,7 +315,7 @@ describe("farm.unstake", () => {
     // When alice unstakes a position for deposit of token id 2, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.unstake(farm, options) }])
-    ).rejects.toThrow("411");
+    ).rejects.toThrow("415");
   });
 
   it("fails for invalid stake", async () => {
@@ -345,7 +345,7 @@ describe("farm.unstake", () => {
     // When alice unstakes a position for stake on incentive 1 with token 1, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.unstake(farm, options) }])
-    ).rejects.toThrow("412");
+    ).rejects.toThrow("416");
   });
 
   it("fails when not called by owner", async () => {

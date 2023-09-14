@@ -141,6 +141,7 @@ describe("core.set_position", () => {
     const tokenYStorage = await tezos.getStorage(tokenY);
 
     const position = await updatedStorage.positions.get(0);
+    const owner = await updatedStorage.ledger.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
 
@@ -179,8 +180,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -296,6 +297,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -335,8 +337,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -449,6 +451,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -488,14 +491,14 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
 
     // Tokens are transferred correctly to the cfmm
-    expect(cfmmBalanceX.balance).toEqual(finalAmounts.x);
+    expect(cfmmBalanceX).toEqual(undefined);
     expect(cfmmBalanceY).toEqual(finalAmounts.y);
   });
 
@@ -602,6 +605,7 @@ describe("core.set_position", () => {
     const tokenXStorage = await tezos.getStorage(tokenX);
     const tokenYStorage = await tezos.getStorage(tokenY);
 
+    const owner = await updatedStorage.ledger.get(0);
     const position = await updatedStorage.positions.get(0);
     const lowerTickState = await updatedStorage.ticks.get(lowerTickIndex);
     const upperTickState = await updatedStorage.ticks.get(upperTickIndex);
@@ -641,8 +645,8 @@ describe("core.set_position", () => {
       liquidity,
       lower_tick_index: number(lowerTickIndex),
       upper_tick_index: number(upperTickIndex),
-      owner: accounts.alice.pkh,
     });
+    expect(owner).toEqual(accounts.alice.pkh);
 
     const cfmmBalanceX = await tokenXStorage.balances.get(core.address);
     const cfmmBalanceY = await tokenYStorage.ledger.get({ 0: core.address, 1: 0 });
@@ -913,5 +917,51 @@ describe("core.set_position", () => {
         { kind: OpKind.TRANSACTION, ...PositionManager.setPositionOp(core, options) },
       ])
     ).rejects.toThrow();
+  });
+
+  it("fails if liquidity addition is paused", async () => {
+    storage.paused.add_liquidity = true;
+    storage.cur_tick_index = number(10);
+    storage.sqrt_price = Tick.computeSqrtPriceFromTick(10);
+
+    const core = await tezos.deployContract("core", storage);
+
+    const lowerTickIndex = -10;
+    const upperTickIndex = 20;
+
+    const sqrtPriceAx80 = Tick.computeSqrtPriceFromTick(lowerTickIndex);
+    const sqrtPriceBx80 = Tick.computeSqrtPriceFromTick(upperTickIndex);
+    const sqrtPriceCx80 = storage.sqrt_price;
+
+    // Arbitrary initial amounts
+    const amount = {
+      x: number(50 * DECIMALS),
+      y: number(50 * DECIMALS),
+    };
+
+    // SDK resolves the correct liquidity and associated amounts
+    const liquidity = Liquidity.computeLiquidityFromAmount(
+      amount,
+      sqrtPriceCx80,
+      sqrtPriceAx80,
+      sqrtPriceBx80
+    );
+
+    const options: SetPositionOptions = {
+      lowerTickIndex,
+      upperTickIndex,
+      lowerTickWitness: -MAX_TICK,
+      upperTickWitness: -MAX_TICK,
+      liquidity,
+      deadline: NOW + 1000,
+      maximumTokensContributed: { x: number(0), y: number(0) }, // Irrelevant for the test
+    };
+
+    // When alice sets a new position when liquidity addition is paused, the txn fails
+    await expect(
+      tezos.sendBatchOp([
+        { kind: OpKind.TRANSACTION, ...PositionManager.setPositionOp(core, options) },
+      ])
+    ).rejects.toThrow("204");
   });
 });

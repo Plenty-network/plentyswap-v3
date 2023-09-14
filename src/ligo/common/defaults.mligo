@@ -131,6 +131,7 @@ let default_storage
       protocol_share = { x = 0n; y = 0n };
       dev_share = { x = 0n; y = 0n };
       ticks = ticks;
+      ledger = (Big_map.empty : ledger);
       positions = (Big_map.empty : position_map);
       cumulatives_buffer = init_cumulatives_buffer init_cumulatives_buffer_extra_slots;
       metadata = metadata_map;
@@ -138,5 +139,6 @@ let default_storage
       operators = (Big_map.empty : operators);
       constants = constants;
       ladder = default_ladder;
+      paused = { swap = false; add_liquidity = false; remove_liquidity = false };
       is_ve = false
     }

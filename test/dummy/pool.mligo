@@ -5,10 +5,12 @@ type storage = {
   position: position_info option;
   cumulatives_inside_snapshot: cumulatives_inside_snapshot option;
   transfer_params: transfer_params option;
+  paused: paused_value option;
 }
 
 type parameter = 
   | Toggle_ve
+  | Pause of paused_value
   | Transfer of transfer_params
   | Default
 
@@ -20,5 +22,6 @@ let main (action, store: parameter * storage): operation list * storage =
   [], (
   match action with 
   | Toggle_ve -> { store with ve = Some true } 
+  | Pause p -> { store with paused = Some p }
   | Transfer p -> { store with transfer_params = Some p }
   | Default -> failwith "Not allowed")

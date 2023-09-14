@@ -187,9 +187,6 @@ type position_state = {
     (* Position edge tick indices *)
     lower_tick_index : tick_index;
     upper_tick_index : tick_index;
-    (* The position's owner.
-        By default - position's creator, but ownership can be transferred later. *)
-    owner : address;
     (* Position's liquidity. *)
     liquidity : nat;
     (* Total fees earned by the position at the moment of last fees collection for this position.
@@ -302,6 +299,15 @@ type fixed_point = { v : nat; offset : int }
 type ladder_key = { exp : nat; positive : bool }
 type ladder = (ladder_key, fixed_point) big_map
 
+(* For tzip-12 compatibility with wallets and tools *)
+type ledger = (nat, address) big_map
+
+(* Features that are paused *)
+type paused_value = [@layout:comb] {
+    swap: bool;
+    add_liquidity: bool;
+    remove_liquidity: bool;
+}
 
 type storage = {
     (* Virtual liquidity, the value L for which the curve locally looks like x * y = L^2. *)
@@ -346,6 +352,9 @@ type storage = {
     (* Cumulative values stored for the recent timestamps. *)
     cumulatives_buffer : timed_cumulatives_buffer;
 
+    (* Store the owners of the positions *)
+    ledger: ledger;
+
     (* TZIP-16 metadata. *)
     metadata : metadata_map;
 
@@ -360,6 +369,9 @@ type storage = {
 
     (* Exponents ladder for the calculation of 'half_bps_pow' *)
     ladder : ladder;
+
+    (* Features that are paused *)
+    paused : paused_value;
 
     (* `true` when the pool is a part of the ve-system *)
     is_ve : bool;
@@ -401,10 +413,11 @@ type update_position_param = {
     to_y : address;
     (* The transaction won't be executed past this point. *)
     deadline : timestamp;
-    (* The maximum number of tokens to contribute.
-        If a higher amount is required, the entrypoint fails.
+    (* 
+       Maximum tokens contributed for liquidity addition.
+       Minimum tokens received for liquidity removal.
     *)
-    maximum_tokens_contributed : balance_nat;
+    tokens_limit : balance_nat;
 }
 
 type x_to_y_param = {
@@ -474,6 +487,7 @@ type parameter =
     | Increase_observation_count of increase_observation_count_param
     | ForwardFee of forwardFee_params
     | Retrieve_dev_share
+    | Pause of paused_value
     | Toggle_ve
 
 #endif

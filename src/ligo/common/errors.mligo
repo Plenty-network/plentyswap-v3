@@ -28,8 +28,9 @@
 (* User provided tick is not initialized. *)
 [@inline] let tick_not_exist_err = 105n
 
-(* The amount of tokens that needs to be transferred to the contract is higher than `maximum_tokens_contributed`. *)
-[@inline] let high_tokens_err = 106n
+(* The amount of tokens being added is more than the maximum intended by the user, or the amount being removed is
+   lower than the minimum intended by the user *)
+[@inline] let tokens_limit_err = 106n
 
 (* The X prime contract address provided is not a segmented-cfmm contract. *)
 [@inline] let invalid_x_prime_contract_err = 107n
@@ -67,7 +68,14 @@
 (* The `x_token_address` or `y_token_address` has no `approve` entrypoint. *)
 [@inline] let asset_approve_invalid_entrypoints_err = 202n
 
+(* Swaps are paused for the pool *)
+[@inline] let swap_paused = 203n
 
+(* Liquidity addition is paused for the pool *)
+[@inline] let liquidity_addition_paused = 204n
+
+(* Liquidity removal is paused for the pool *)
+[@inline] let liquidity_removal_paused = 205n
 
 // ---------------------------------------------------------------------------
 // -- Internal error codes
@@ -145,6 +153,9 @@
 (* Price became negative when crossing a tick *)
 [@inline] let internal_negative_price = 326n
 
+(* Incorrect token ordering in the factory deploy pool *)
+[@inline] let invalid_token_ordering = 327n
+
 (* Invalid fee tier has been selected for the pool deployment *)
 [@inline] let invalid_fee_tier = 400n
 
@@ -175,38 +186,44 @@
 (* Invalid protocol share*)
 [@inline] let invalid_protocol_share = 409n
 
+(* Entry point does not accept tez *)
+[@inline] let tez_not_accepted = 410n
+
 // ---------------------------------------------------------------------------
 // -- Farm codes
 // ---------------------------------------------------------------------------
 
 (* Incentive id not present in the incentives big_map *)
-[@inline] let invalid_incentive_id = 407n
+[@inline] let invalid_incentive_id = 411n
 
 (* The incentive is over *)
-[@inline] let incentive_ended = 408n
+[@inline] let incentive_ended = 412n
 
 (* Cumulatives snapshot returned from the cfmm is invalid *)
-[@inline] let invalid_cumulatives_value = 409n
+[@inline] let invalid_cumulatives_value = 413n
 
 (* Unlikely internal error when unclaimed seconds becomes negative *)
-[@inline] let claimed_too_much_seconds = 410n
+[@inline] let claimed_too_much_seconds = 414n
 
 (* The position token is not yet deposited in the farm *)
-[@inline] let no_deposit_for_token = 411n
+[@inline] let no_deposit_for_token = 415n
 
 (* The position token is not staked for the incentive *)
-[@inline] let no_stake_for_token = 412n
+[@inline] let no_stake_for_token = 416n
 
 (* There are active stakes for the deposit so it can't be withdrawn yet *)
-[@inline] let active_stakes = 413n
+[@inline] let active_stakes = 417n
 
 (* The start time of an incentive is either greater than end or the start is in the past *)
-[@inline] let invalid_start_and_end = 414n
+[@inline] let invalid_start_and_end = 418n
 
 (* The claim deadline is within the incentive period *)
-[@inline] let invalid_claim_deadline = 415n
+[@inline] let invalid_claim_deadline = 419n
 
 (* The admin is ending the incentive before the claim deadline *)
-[@inline] let claim_deadline_not_reached = 416n
+[@inline] let claim_deadline_not_reached = 420n
+
+(* Stake already exists for the given NFT *)
+[@inline] let stake_already_exists = 421n
 
 #endif

@@ -2,11 +2,16 @@
 
 (* Helpers *)
 
-[@inline]
 let get_position (position_id, positions : position_id * position_map) : position_state =
     match Big_map.find_opt position_id positions with
     | Some position -> position
     | None -> failwith "FA2_TOKEN_UNDEFINED"
+
+[@inline]
+let get_owner (token_id: nat) (ledger: ledger): address =
+    match Big_map.find_opt token_id ledger with
+    | None -> failwith "FA2_TOKEN_UNDEFINED"
+    | Some o -> o
 
 [@inline]
 let check_sender (from_ , token_id, operators : address * token_id * operators): unit =
@@ -18,20 +23,18 @@ let check_sender (from_ , token_id, operators : address * token_id * operators):
 
 (* A function that combines the usual FA2's `debit_from` and `credit_to`. *)
 [@inline]
-let change_position_owner (from_, tx, positions: address * transfer_destination * position_map): position_map =
+let change_position_owner (from_, tx, ledger: address * transfer_destination * ledger): ledger =
     if tx.amount = 0n then
-        positions (* We allow 0 transfer *)
+        ledger (* We allow 0 transfer *)
     else
-        let position = get_position(tx.token_id, positions) in
+        let owner = get_owner tx.token_id ledger in
+        (* Ensure `from_` is the owner of the position. *)
+        let owned_amount = if owner = from_ then 1n else 0n in
+        let _ : unit =
+            if (owned_amount = 1n && tx.amount = 1n) then unit
+            else failwith "FA2_INSUFFICIENT_BALANCE" in
 
-    (* Ensure `from_` is the owner of the position. *)
-    let owned_amount = if position.owner = from_ then 1n else 0n in
-    let _ : unit =
-        if (owned_amount = 1n && tx.amount = 1n) then unit
-        else failwith "FA2_INSUFFICIENT_BALANCE" in
-
-    let new_position = { position with owner = tx.to_ } in
-    Big_map.add tx.token_id new_position positions
+        Big_map.update tx.token_id (Some tx.to_) ledger
 
 
 (* Transfer *)
@@ -39,8 +42,8 @@ let change_position_owner (from_, tx, positions: address * transfer_destination 
 let transfer_item (store, ti : storage * transfer_item): storage =
   let transfer_one (store, tx : storage * transfer_destination): storage =
     let _ : unit = check_sender (ti.from_, tx.token_id, store.operators) in
-    let new_positions = change_position_owner (ti.from_, tx, store.positions) in
-    { store with positions = new_positions }
+    let new_ledger = change_position_owner (ti.from_, tx, store.ledger) in
+    { store with ledger = new_ledger }
   in List.fold transfer_one ti.txs store
 
 let transfer (params, store : transfer_params * storage): result =
@@ -51,10 +54,10 @@ let transfer (params, store : transfer_params * storage): result =
 (* Balance of *)
 
 let balance_of (params, store : balance_request_params * storage): result =
-  let positions = store.positions in
+  let ledger = store.ledger in
   let check_one (req : balance_request_item): balance_response_item =
-    let pos_index = get_position(req.token_id, positions) in
-    let bal = if req.owner = pos_index.owner then 1n else 0n in
+    let owner = get_owner req.token_id ledger in
+    let bal = if req.owner = owner then 1n else 0n in
     { request = req; balance = bal } in
   let result = List.map check_one params.requests in
   let transfer_operation = Tezos.transaction result 0mutez params.callback in

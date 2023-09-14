@@ -15,40 +15,16 @@ describe("core.balance_of", () => {
     tezos = new Tezos(config.rpcURL);
     await tezos.setSigner(accounts.alice.sk);
 
-    const positions = new MichelsonMap<number, Position>();
+    const ledger = new MichelsonMap<number, string>();
 
-    positions.set(1, {
-      owner: accounts.alice.pkh,
-      lower_tick_index: number(-10),
-      upper_tick_index: number(20),
-      liquidity: number(1000),
-      fee_growth_inside_last: { x: number(0), y: number(0) },
-    });
-    positions.set(2, {
-      owner: accounts.alice.pkh,
-      lower_tick_index: number(-10),
-      upper_tick_index: number(20),
-      liquidity: number(1000),
-      fee_growth_inside_last: { x: number(0), y: number(0) },
-    });
-    positions.set(3, {
-      owner: accounts.alice.pkh,
-      lower_tick_index: number(-10),
-      upper_tick_index: number(20),
-      liquidity: number(1000),
-      fee_growth_inside_last: { x: number(0), y: number(0) },
-    });
-    positions.set(4, {
-      owner: accounts.alice.pkh,
-      lower_tick_index: number(-10),
-      upper_tick_index: number(20),
-      liquidity: number(1000),
-      fee_growth_inside_last: { x: number(0), y: number(0) },
-    });
+    ledger.set(1, accounts.alice.pkh);
+    ledger.set(2, accounts.alice.pkh);
+    ledger.set(3, accounts.alice.pkh);
+    ledger.set(4, accounts.alice.pkh);
 
     storage = {
       ...getDefaultCoreStorage(),
-      positions,
+      ledger,
     };
   });
 

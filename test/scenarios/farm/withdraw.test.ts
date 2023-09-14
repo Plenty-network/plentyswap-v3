@@ -71,7 +71,7 @@ describe("farm.withdraw", () => {
     // When alice withdraws deposit 2, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.withdraw(farm, 2) }])
-    ).rejects.toThrow("411");
+    ).rejects.toThrow("415");
   });
 
   it("fails if the deposit has stakes", async () => {
@@ -90,7 +90,7 @@ describe("farm.withdraw", () => {
     // When alice withdraws deposit that has stakes, txn fails
     await expect(
       tezos.sendBatchOp([{ kind: OpKind.TRANSACTION, ...StakeManager.withdraw(farm, 1) }])
-    ).rejects.toThrow("413");
+    ).rejects.toThrow("417");
   });
 
   it("fails if the sender is not the deposit owner", async () => {

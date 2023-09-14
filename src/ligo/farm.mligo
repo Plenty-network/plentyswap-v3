@@ -90,43 +90,43 @@ type get_reward_params = {
 
 (* Entrypoints and lambdas *)
 
-let get_reward (params: get_reward_params): incentive * nat =
-    let max_timestamp(a, b : timestamp * timestamp) : timestamp =
-        if a > b then a else b in
+let get_reward (params: get_reward_params): incentive * nat =    
+    if Tezos.get_now () > params.incentive.claim_deadline then
+        (params.incentive, 0n)
+    else
+        let max_timestamp(a, b : timestamp * timestamp) : timestamp =
+            if a > b then a else b in
 
-    (* Theoretically, we are calculating the number of seconds for which the liquidity of this position was active,
-       pro rated for all positions in that tick range. *)
-    let seconds_per_liquidity_inside_diff = {
-        x128 = assert_nat
-            ( params.seconds_per_liquidity_inside.x128 - params.stake.seconds_per_liquidity_inside_last.x128,
-            invalid_cumulatives_value)
-    } in
-    let seconds_inside = { x128 = seconds_per_liquidity_inside_diff.x128 * params.stake.liquidity } in
-    let total_seconds_for_reward = 
-        assert_nat(max_timestamp(params.incentive.end_time, Tezos.get_now()) - params.incentive.start_time, internal_impossible_err) in
-    let total_seconds_unclaimed = {
-        x128 = assert_nat 
-            ( Bitwise.shift_left total_seconds_for_reward 128n - params.incentive.total_seconds_claimed.x128,
-            claimed_too_much_seconds)
-    } in
+        (* Theoretically, we are calculating the number of seconds for which the liquidity of this position was active,
+        pro rated for all positions in that tick range. *)
+        let seconds_per_liquidity_inside_diff = {
+            x128 = assert_nat
+                ( params.seconds_per_liquidity_inside.x128 - params.stake.seconds_per_liquidity_inside_last.x128,
+                invalid_cumulatives_value)
+        } in
+        let seconds_inside = { x128 = seconds_per_liquidity_inside_diff.x128 * params.stake.liquidity } in
+        let total_seconds_for_reward = 
+            assert_nat(max_timestamp(params.incentive.end_time, Tezos.get_now()) - params.incentive.start_time, internal_impossible_err) in
+        let total_seconds_unclaimed = {
+            x128 = assert_nat 
+                ( Bitwise.shift_left total_seconds_for_reward 128n - params.incentive.total_seconds_claimed.x128,
+                claimed_too_much_seconds)
+        } in
+        
+        let reward = (params.incentive.total_reward_unclaimed * seconds_inside.x128) / total_seconds_unclaimed.x128 in
 
-    let reward = 
-        if Tezos.get_now () > params.incentive.claim_deadline then 0n 
-        else (params.incentive.total_reward_unclaimed * seconds_inside.x128) / total_seconds_unclaimed.x128 in
-
-    let (reward, remaining_reward) =
-        match is_nat(params.incentive.total_reward_unclaimed - reward) with
-        | Some remaining -> (reward, remaining)
-        | None -> (params.incentive.total_reward_unclaimed, 0n) in
-
-    (
-        { 
-            params.incentive with 
-            total_reward_unclaimed = remaining_reward; 
-            total_seconds_claimed = { x128 = params.incentive.total_seconds_claimed.x128 + seconds_inside.x128 };
-        },
-        reward
-    )
+        let (reward, remaining_reward) =
+            match is_nat(params.incentive.total_reward_unclaimed - reward) with
+            | Some remaining -> (reward, remaining)
+            | None -> (params.incentive.total_reward_unclaimed, 0n) in
+        (
+            { 
+                params.incentive with 
+                total_reward_unclaimed = remaining_reward; 
+                total_seconds_claimed = { x128 = params.incentive.total_seconds_claimed.x128 + seconds_inside.x128 };
+            },
+            reward
+        )
 
 
 let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
@@ -155,9 +155,9 @@ let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
         | Some cs -> cs in 
 
     (* If no stake exists for this token on the incentive then create fresh stake,
-       otherwise compute already accrued rewards and update the stake
-       The latter can be useful when liquidity is added to a position that is already staked. *)
+       otherwise revert *)
     match Big_map.find_opt (token_id, incentive_id) store.stakes with
+    | Some _ -> failwith stake_already_exists
     | None -> begin
         (* Create a deposit if not already present *)
         let op, deposit = match Big_map.find_opt token_id store.deposits with 
@@ -183,29 +183,6 @@ let stake ((token_id, incentive_id): nat * nat) (store: storage) : return =
             Big_map.update incentive_id (Some { incentive with n_stakes = incentive.n_stakes + 1n }) store.incentives in
 
         op, { store with stakes = updated_stakes; deposits = updated_deposits; incentives = updated_incentives; }
-    end
-    | Some stake -> begin
-        (* Get existing unclaimed reward and updated incentive for the stake *)
-        let (incentive, reward) = 
-            get_reward { 
-                incentive; 
-                stake; 
-                seconds_per_liquidity_inside = cumulatives_snapshot.seconds_per_liquidity_inside;
-            } in
-        
-        let existing_reward = 
-            match Big_map.find_opt (incentive.reward_token, owner) store.rewards with None -> 0n | Some r -> r in
-
-        let stake: stake = { 
-            seconds_per_liquidity_inside_last = cumulatives_snapshot.seconds_per_liquidity_inside;
-            liquidity;
-        } in
-
-        let updated_stakes = Big_map.update (token_id, incentive_id) (Some stake) store.stakes in
-        let updated_incentives = Big_map.update incentive_id (Some incentive) store.incentives in
-        let updated_rewards = 
-            Big_map.update (incentive.reward_token, owner) (Some (existing_reward + reward)) store.rewards in
-        [], { store with incentives = updated_incentives; rewards = updated_rewards; stakes = updated_stakes; }
     end
 
 
@@ -373,7 +350,9 @@ let accept_new_admin (_: unit) (store: storage): return =
     end
 
 
-let main (action, store: parameter * storage): return = 
+let main (action, store: parameter * storage): return =
+    let _ = if Tezos.get_amount () <> 0mutez then failwith tez_not_accepted else unit in
+
     match action with 
     | Stake p -> stake p store
     | Unstake p -> unstake p store

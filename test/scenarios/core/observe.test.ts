@@ -41,6 +41,30 @@ describe("core.observe", () => {
     expect(result[0].tick_cumulative).toEqual(number(1000));
   });
 
+  it("extrapolates the last value correctly", async () => {
+    storage.cumulatives_buffer.map.set(0, {
+      time: 100,
+      tick: { sum: number(1000), block_start_value: number(10) },
+      spl: { sum: number(1000), block_start_liquidity_value: number(10) },
+    });
+
+    storage.liquidity = number(11);
+    storage.cur_tick_index = number(11);
+
+    const core = await tezos.deployContract("core", storage);
+
+    // When the view is called
+    const result = await core.contractViews
+      .observe([105])
+      .executeView({ viewCaller: accounts.alice.pkh });
+
+    const splDelta = Math2.bitShift(number(5), -128).dividedBy(11).decimalPlaces(0);
+
+    // Correct value is returned
+    expect(result[0].seconds_per_liquidity_cumulative).toEqual(number(1000).plus(splDelta));
+    expect(result[0].tick_cumulative).toEqual(number(1055));
+  });
+
   it("correctly extrapolates for 2 entries", async () => {
     storage.cumulatives_buffer.map.set(0, {
       time: 100,
@@ -146,7 +170,7 @@ describe("core.observe", () => {
     expect(result[1].tick_cumulative).toEqual(number(3900));
   });
 
-  it("fails if the requested tiemstamps do not fall within the record boundaries", async () => {
+  it("fails if the requested timestamps do not fall within the record boundaries", async () => {
     storage.cumulatives_buffer.map.set(0, {
       time: 100,
       tick: { sum: number(1000), block_start_value: number(10) },
@@ -177,9 +201,11 @@ describe("core.observe", () => {
       core.contractViews.observe([50]).executeView({ viewCaller: accounts.alice.pkh })
     ).rejects.toThrow();
 
-    // When the view is called with a timestamp higher than highest record, txn fails
+    // When the view is called with a timestamp higher than current time, txn fails
     await expect(
-      core.contractViews.observe([500]).executeView({ viewCaller: accounts.alice.pkh })
+      core.contractViews
+        .observe([Math.floor(Date.now() / 1000) + 10])
+        .executeView({ viewCaller: accounts.alice.pkh })
     ).rejects.toThrow();
   });
 });

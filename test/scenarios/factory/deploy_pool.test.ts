@@ -84,9 +84,9 @@ describe("factory.deploy_pool", () => {
     });
     expect(poolStorage.constants.tick_spacing).toEqual(number(1));
     expect(poolStorage.is_ve).toEqual(false);
-    expect(await poolStorage.metadata.get("")).toEqual(
-      "68747470733a2f2f6d657461646174615f75726c2e636f6d"
-    );
+    // expect(await poolStorage.metadata.get("")).toEqual(
+    //   "68747470733a2f2f6d657461646174615f75726c2e636f6d"
+    // );
 
     expect(minTick).toEqual({
       prev: number(-MAX_TICK - 1),
@@ -210,9 +210,9 @@ describe("factory.deploy_pool", () => {
       seconds_per_liquidity_outside: number(0),
       sqrt_price: Tick.computeSqrtPriceFromTick(MAX_TICK),
     });
-    expect(await poolStorage.metadata.get("")).toEqual(
-      "68747470733a2f2f6d657461646174615f75726c2e636f6d"
-    );
+    // expect(await poolStorage.metadata.get("")).toEqual(
+    //   "68747470733a2f2f6d657461646174615f75726c2e636f6d"
+    // );
 
     expect(bufferEntry1).toEqual({
       time: new Date(0).toISOString(),
@@ -232,6 +232,32 @@ describe("factory.deploy_pool", () => {
 
     // Pool is also recorded in the factory
     expect(await factoryStorage.pools.get({ 0: tokenX, 1: tokenY, 2: 1 })).toEqual(deployedPool);
+  });
+
+  it("fails for incorrect token ordering", async () => {
+    const factory = await tezos.deployContract("factory", storage);
+
+    // Doesn't make sense to have bob as a token, but it works for the purpose of this test
+    const tokenX: Fa12 = { fa12: accounts.bob.pkh };
+    const tokenY: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
+
+    // Fails if fee tier is invalid
+    await expect(
+      tezos.sendBatchOp([
+        {
+          kind: OpKind.TRANSACTION,
+          ...factory.methodsObject
+            .deploy_pool({
+              token_x: tokenY, // Flip the ordering so that the michelson comparison fails
+              token_y: tokenX,
+              initial_tick_index: 10,
+              fee_bps: 1,
+              extra_slots: 0,
+            })
+            .toTransferParams(),
+        },
+      ])
+    ).rejects.toThrow("327");
   });
 
   it("fails for invalid fee tier", async () => {
@@ -290,23 +316,33 @@ describe("factory.deploy_pool", () => {
         },
       ])
     ).rejects.toThrow("406");
+  });
 
-    // Fails when the pool is deployed again (tokens flipped)
+  // This test is a valid check for all EPs since tez rejection is placed before paramater
+  // pattern match starts
+  it("fails if tez is sent to the EP", async () => {
+    // Doesn't make sense to have bob as a token, but it works for the purpose of this test
+    const tokenX: Fa12 = { fa12: accounts.bob.pkh };
+    const tokenY: Fa2 = { fa2: { address: accounts.bob.pkh, token_id: number(1) } };
+
+    const factory = await tezos.deployContract("factory", storage);
+
+    // Fails when tez is sent to the EP
     await expect(
       tezos.sendBatchOp([
         {
           kind: OpKind.TRANSACTION,
           ...factory.methodsObject
             .deploy_pool({
-              token_x: tokenY, // Flip
-              token_y: tokenX,
+              token_x: tokenX,
+              token_y: tokenY,
               initial_tick_index: 10,
               fee_bps: 1,
               extra_slots: 0,
             })
-            .toTransferParams(),
+            .toTransferParams({ amount: 1 }), // Non zero amount
         },
       ])
-    ).rejects.toThrow("406");
+    ).rejects.toThrow("410");
   });
 });

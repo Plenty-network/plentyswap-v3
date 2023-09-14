@@ -10,13 +10,17 @@ tezos.setProvider({
 
 (async () => {
   try {
+    //=========
+    // Factory
+    //=========
+
     console.log("> Deploying segmented CFMM factory...");
 
-    // Load code
-    const code = fs.readFileSync(`${__dirname}/../src/michelson/factory.tz`).toString();
+    // Load factory code
+    const factoryCode = fs.readFileSync(`${__dirname}/../src/michelson/factory.tz`).toString();
 
     // Initial storage
-    const storage = {
+    const factoryStorage = {
       admin: "tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S",
       proposed_admin: null,
       pools: MichelsonMap.fromLiteral({}),
@@ -33,10 +37,36 @@ tezos.setProvider({
     };
 
     // Deploy
-    const op = await tezos.contract.originate({ code, storage });
-    await op.confirmation(1);
+    const op1 = await tezos.contract.originate({ code: factoryCode, storage: factoryStorage });
+    await op1.confirmation(1);
 
-    console.log(`>> Deployed at: ${op.contractAddress}`);
+    console.log(`>> Deployed at: ${op1.contractAddress}`);
+
+    //================
+    // Metadata Store
+    //================
+
+    // console.log("> Deploying Metadata Store...");
+
+    // // Load metadata store code
+    // const metadataStoreCode = fs
+    //   .readFileSync(`${__dirname}/../src/michelson/metadata_store.tz`)
+    //   .toString();
+
+    // // Initial storage
+    // const metadataStoreStorage = {
+    //   admins: ["tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S"],
+    //   tokens: MichelsonMap.fromLiteral({}),
+    // };
+
+    // // Deploy
+    // const op2 = await tezos.contract.originate({
+    //   code: metadataStoreCode,
+    //   storage: metadataStoreStorage,
+    // });
+    // await op2.confirmation(1);
+
+    // console.log(`>> Deployed at: ${op2.contractAddress}`);
   } catch (err) {
     console.error(err);
   }

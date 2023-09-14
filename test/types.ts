@@ -61,7 +61,17 @@ export interface Position {
   liquidity: BigNumber;
   lower_tick_index: BigNumber;
   upper_tick_index: BigNumber;
+}
+
+export interface PositionInfo {
+  fee_growth_inside_last: {
+    x: BigNumber;
+    y: BigNumber;
+  };
   owner: string;
+  liquidity: BigNumber;
+  lower_tick_index: BigNumber;
+  upper_tick_index: BigNumber;
 }
 
 export interface TickState {
@@ -94,6 +104,7 @@ export interface CoreStorage {
     y: BigNumber;
   };
   ticks: MichelsonMap<number, TickState>;
+  ledger: MichelsonMap<number, string>;
   positions: MichelsonMap<number, Position>;
   cumulatives_buffer: {
     map: MichelsonMap<number, TimedCumulatives>;
@@ -112,6 +123,7 @@ export interface CoreStorage {
     tick_spacing: BigNumber;
   };
   ladder: MichelsonMap<any, any>;
+  paused: { swap: boolean; add_liquidity: boolean; remove_liquidity: boolean };
   is_ve: boolean;
 }
 
