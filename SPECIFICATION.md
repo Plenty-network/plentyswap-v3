@@ -160,6 +160,8 @@ For example, when the price moves from `p(1)` to `p(2)`, we start taking positio
 liquidity into account.
 When it moves from `p(3)` to `p(4)`, we stop taking `p1`'s liquidity into account.
 
+> ⚠️ The price movement during a swap is constrained within the range (0.7, 1.5). If the price movement becomes too sharp and surpasses this range, the transaction will be reverted.
+
 ## Fees
 
 At the beginning of every swap, the contract subtracts a _swap fee_ from the tokens sent in,
@@ -167,8 +169,9 @@ _before_ all other calculations. Whatever remains, is deposited into the liquidi
 exchanged for the other asset.
 
 For example, if the swap fee is 0.3% and the user sends in 10000 `y` tokens, then:
-* 30 `y` tokens will be collected as swap fees and set aside,
-* 9970 `y` tokens will be deposited into the liquidity pool and exchanged for `x` tokens
+
+- 30 `y` tokens will be collected as swap fees and set aside,
+- 9970 `y` tokens will be deposited into the liquidity pool and exchanged for `x` tokens
   according to the _constant function_ calculations.
 
 There is a `dev_share` and a `protocol_share` that is taken directly from this fee. The bps values of both the shares are stored in the factory contract.
@@ -176,8 +179,9 @@ There is a `dev_share` and a `protocol_share` that is taken directly from this f
 When an LP updates their position, they are rewarded with part of the swap fees paid by users,
 in both `x` and `y` tokens.
 This reward is proportional to:
-* the position's size,
-* and the amount of swap fees collected while the position remained _active_ since the last
+
+- the position's size,
+- and the amount of swap fees collected while the position remained _active_ since the last
   time the position was updated/created.
 
 Both the swap fee and the protocol fee percentages are initialized when the contract is
@@ -236,13 +240,12 @@ rate * position_liquidity * (seconds_per_liquidity_cumulative_t1 - seconds_per_l
 
 ## Standard FA2 entrypoints
 
-Entrypoints present in the [*FA2 Standard*][fa2].
+Entrypoints present in the [_FA2 Standard_][fa2].
 
 In the context of this contract, [positions](#positions) are NFTs and these
 entrypoints can be used to manage them.
 
 Note: this contract implements the [Default Transfer Permission Policy](https://gitlab.com/tezos/tzip/-/blob/master/proposals/tzip-12/tzip-12.md#default-transfer-permission-policy).
-
 
 ### **transfer**
 
@@ -374,7 +377,6 @@ type x_to_y_param = {
 }
 ```
 
-
 ### **y_to_x**
 
 Perform a token [swap](#swaps) from `y` to `x`.
@@ -422,7 +424,6 @@ type set_position_param = {
 type balance_nat = {x: nat ; y: nat}
 ```
 
-
 ### **update_position**
 
 Updates an existing [position](#positions).
@@ -430,9 +431,9 @@ Updates an existing [position](#positions).
 - The liquidity of the `SENDER` will be updated by `liquidity_delta`, increased
   or decreased depending on the sign, for both tokens of the pair.
 - In case, after adding eventual accrued fees, the `liquidity_delta` is:
-  * positive in `x` and/or `y`: this amount will be `transfer`red **from** the `SENDER`
-  * negative in `x`: this amount will be `transfer`red **to** `to_x`
-  * negative in `y`: this amount will be `transfer`red **to** `to_y`
+  - positive in `x` and/or `y`: this amount will be `transfer`red **from** the `SENDER`
+  - negative in `x`: this amount will be `transfer`red **to** `to_x`
+  - negative in `y`: this amount will be `transfer`red **to** `to_y`
 - If the position update is no longer acceptable because the `deadline` was not
   met, fails with `past_deadline_err` error code
 - If the amount of tokens that needs to be `transfer`red to the contract
@@ -474,7 +475,7 @@ type forwardFee_params = {
 
 ### **retrieve_dev_share**
 
-Allows the dev address stored in the factory to retrieve the dev share of the fees. 
+Allows the dev address stored in the factory to retrieve the dev share of the fees.
 
 - If not called by the dev, fails with `not_authorised` error code.
 - Transfers the tokens from its own address to the dev address.
@@ -504,7 +505,6 @@ type position_info = {
     upper_tick_index: tick_index;
 }
 ```
-
 
 ### **snapshot_cumulatives_inside**
 
@@ -543,7 +543,6 @@ type cumulatives_inside_snapshot_param = {
 }
 ```
 
-
 ### **observe**
 
 Oracle `view` for the cumulative tick and liquidity-in-range, calculated for each
@@ -553,14 +552,14 @@ Oracle `view` for the cumulative tick and liquidity-in-range, calculated for eac
   The order of the computed entries is the same as that of the given `timestamp`s.
 - The `callback` contract will be called with the computed values.
 - For each `timestamp`/`cumulative_entry` pair:
-  * `tick_cumulative` is the cumulative tick value at that `timestamp`.
-  * `seconds_per_liquidity_cumulative` is the cumulative seconds per
+  - `tick_cumulative` is the cumulative tick value at that `timestamp`.
+  - `seconds_per_liquidity_cumulative` is the cumulative seconds per
     liquidity-in-range at that `timestamp`.
 - The contract stores a fixed number of past observations, with recent observations overwriting the oldest.
-  * As a result, if any of the timestamps given in the entrypoint's parameter
-  is too far back in the past, the entrypoint fails with `observe_outdated_timestamp_err` error code.
-  * Note that the amount of observations stored by the contract can be increased
-  via the `increase_observation_count` entrypoint.
+  - As a result, if any of the timestamps given in the entrypoint's parameter
+    is too far back in the past, the entrypoint fails with `observe_outdated_timestamp_err` error code.
+  - Note that the amount of observations stored by the contract can be increased
+    via the `increase_observation_count` entrypoint.
 - If any of the timestamps given in the entrypoint's parameter is yet in the future, the entrypoint fails with `observe_future_timestamp_err`.
 
 ```ocaml
@@ -603,23 +602,23 @@ continually pay additional storage costs every time a block is baked, which is n
 When an operation results in tokens being transferred to the contract, the amount of tokens to transfer is rounded up.
 These operations include:
 
-* Creating a position / adding liquidity to a position.
-* Charging swap fees.
-* Deposits of `y` tokens as part of `y_to_x` swaps.
-* Deposits of `x` tokens as part of `x_to_y` swaps.
+- Creating a position / adding liquidity to a position.
+- Charging swap fees.
+- Deposits of `y` tokens as part of `y_to_x` swaps.
+- Deposits of `x` tokens as part of `x_to_y` swaps.
 
 Conversely, when an operation results in tokens being transferred out of the contract, the amount of tokens to transfer is rounded down.
 These operations include:
 
-* Removing liquidity from a position.
-* Withdrawing fees earned by a position.
-* Withdrawing `x` tokens as part of `y_to_x` swaps.
-* Withdrawing `y` tokens as part of `x_to_y` swaps.
+- Removing liquidity from a position.
+- Withdrawing fees earned by a position.
+- Withdrawing `x` tokens as part of `y_to_x` swaps.
+- Withdrawing `y` tokens as part of `x_to_y` swaps.
 
 Rounding the amount of tokens in the contract's favor guarantees that the contract always
 has enough balance to liquidate all the LPs' positions if need be.
 
- [uniswap-v3]: https://uniswap.org/whitepaper-v3.pdf
- [spot-price]: https://www.investopedia.com/terms/s/spotprice.asp
- [fa1.2]: https://gitlab.com/tezos/tzip/-/blob/master/proposals/tzip-7/tzip-7.md
- [fa2]: https://gitlab.com/tezos/tzip/-/blob/master/proposals/tzip-12/tzip-12.md
+[uniswap-v3]: https://uniswap.org/whitepaper-v3.pdf
+[spot-price]: https://www.investopedia.com/terms/s/spotprice.asp
+[fa1.2]: https://gitlab.com/tezos/tzip/-/blob/master/proposals/tzip-7/tzip-7.md
+[fa2]: https://gitlab.com/tezos/tzip/-/blob/master/proposals/tzip-12/tzip-12.md
