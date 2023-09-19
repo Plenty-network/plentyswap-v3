@@ -30,11 +30,11 @@ let token_metadata (token_id, store : nat * storage) : token_metadata_value =
     
     (* Pull token metadata from factory *)
     let xt_opt = 
-        match Tezos.call_view "get_token_metadata" store.constants.token_x ("KT1DCWYFzhoPd7URCB3fyEpbLiGhCQn7ZbxP": address) with
+        match Tezos.call_view "get_token_metadata" store.constants.token_x ("KT1WPqxWYRF3EWTFR6JwNBBcwHAi4huAb9sp": address) with
         | Some v -> v
         | None -> failwith invalid_contract in
     let yt_opt = 
-        match Tezos.call_view "get_token_metadata" store.constants.token_y ("KT1DCWYFzhoPd7URCB3fyEpbLiGhCQn7ZbxP": address) with
+        match Tezos.call_view "get_token_metadata" store.constants.token_y ("KT1WPqxWYRF3EWTFR6JwNBBcwHAi4huAb9sp": address) with
         | Some v -> v
         | None -> failwith invalid_contract in
     
@@ -66,7 +66,7 @@ let token_metadata (token_id, store : nat * storage) : token_metadata_value =
         let background_seed = 
             match store.constants.token_x, store.constants.token_y with 
             | Fa12 _, Fa2 _ -> 0n
-            | Fa2 _, Fa12 _ -> 1n
+            | Fa12 _, Fa12 _ -> 1n
             | _ -> 2n
         in
 

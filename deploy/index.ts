@@ -1,8 +1,11 @@
 import fs from "fs";
-import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
+import * as dotenv from "dotenv";
 import { InMemorySigner } from "@taquito/signer";
+import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
 
-const tezos = new TezosToolkit("https://ghostnet.smartpy.io");
+dotenv.config();
+
+const tezos = new TezosToolkit("https://mainnet.smartpy.io");
 
 tezos.setProvider({
   signer: new InMemorySigner(process.env.PRIVATE_KEY as string),
@@ -21,7 +24,7 @@ tezos.setProvider({
 
     // Initial storage
     const factoryStorage = {
-      admin: "tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S",
+      admin: "tz1Y8cACwiwQYwLNzzHnBvLQBendT6DUR3Rn",
       proposed_admin: null,
       pools: MichelsonMap.fromLiteral({}),
       fee_tiers: MichelsonMap.fromLiteral({
@@ -30,7 +33,7 @@ tezos.setProvider({
         30: 60,
         100: 200,
       }),
-      dev: "tz1eUzpKnk5gKLYw4HWs2sWsynfbT7ypGxNM",
+      dev: "tz1Y8cACwiwQYwLNzzHnBvLQBendT6DUR3Rn",
       protocol_share_bps: 0,
       dev_share_bps: 2000,
       voter: "KT1Xa92Nf6evFcEbxMXencfGPmS4urNyn5wd",
@@ -55,7 +58,7 @@ tezos.setProvider({
 
     // // Initial storage
     // const metadataStoreStorage = {
-    //   admins: ["tz1ZczbHu1iLWRa88n9CUiCKDGex5ticp19S"],
+    //   admins: ["tz1Y8cACwiwQYwLNzzHnBvLQBendT6DUR3Rn", "tz1er6iTDLBC9hBeWNme7oR8VvAAhWqzkz9C"],
     //   tokens: MichelsonMap.fromLiteral({}),
     // };
 
