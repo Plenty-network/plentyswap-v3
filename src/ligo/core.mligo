@@ -220,7 +220,7 @@ let update_balances_after_position_change
 
     let ops = if delta.y > 0 then
         (cfmm_token_transfer (Tezos.get_sender ()) (Tezos.get_self_address ()) delta_abs.y s.constants.token_y)::ops
-    else if delta.x < 0 then
+    else if delta.y < 0 then
         (cfmm_token_transfer (Tezos.get_self_address ()) to_y delta_abs.y s.constants.token_y)::ops 
     else
         ops

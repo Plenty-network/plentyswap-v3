@@ -1995,7 +1995,7 @@
                                              CONS }
                                            { PUSH int 0 ;
                                              DIG 3 ;
-                                             CAR ;
+                                             CDR ;
                                              COMPARE ;
                                              LT ;
                                              IF { DUP 3 ;
